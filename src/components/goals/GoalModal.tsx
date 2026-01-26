@@ -67,7 +67,6 @@ export function GoalModal({ isOpen, onClose, onSave, goal, spaces }: GoalModalPr
     const [objectives, setObjectives] = useState<Objective[]>([]);
     const [newObjectiveTitle, setNewObjectiveTitle] = useState("");
 
-    // Reset form when modal opens/closes or goal changes
     useEffect(() => {
         if (isOpen) {
             if (goal) {
@@ -91,14 +90,12 @@ export function GoalModal({ isOpen, onClose, onSave, goal, spaces }: GoalModalPr
 
     const handleAddObjective = () => {
         if (!newObjectiveTitle.trim()) return;
-        
         const newObjective: Objective = {
             id: `obj-${Date.now()}`,
             title: newObjectiveTitle,
             progress: 0,
             tasks: [],
         };
-        
         setObjectives([...objectives, newObjective]);
         setNewObjectiveTitle("");
     };
@@ -109,7 +106,6 @@ export function GoalModal({ isOpen, onClose, onSave, goal, spaces }: GoalModalPr
 
     const handleAddTask = (objectiveId: string, taskTitle: string) => {
         if (!taskTitle.trim()) return;
-        
         setObjectives(objectives.map(obj => {
             if (obj.id === objectiveId) {
                 return {
@@ -139,9 +135,7 @@ export function GoalModal({ isOpen, onClose, onSave, goal, spaces }: GoalModalPr
 
     const handleSave = () => {
         if (!title.trim()) return;
-        
         const selectedSpaceData = spaces.find(s => s.id === selectedSpace);
-        
         const newGoal: Goal = {
             id: goal?.id || `goal-${Date.now()}`,
             title,
@@ -154,7 +148,6 @@ export function GoalModal({ isOpen, onClose, onSave, goal, spaces }: GoalModalPr
             dueDate: dueDate || undefined,
             status: "active",
         };
-        
         onSave(newGoal);
         onClose();
     };
@@ -288,13 +281,10 @@ export function GoalModal({ isOpen, onClose, onSave, goal, spaces }: GoalModalPr
                                             className={cn(
                                                 "w-8 h-8 rounded-full transition-all",
                                                 selectedColor === color.value
-                                                    ? "ring-2 ring-offset-2 ring-offset-background"
+                                                    ? "ring-2 ring-offset-2 ring-offset-background ring-current"
                                                     : "hover:scale-110"
                                             )}
-                                            style={{ 
-                                                backgroundColor: color.value,
-                                                ringColor: color.value,
-                                            }}
+                                            style={{ backgroundColor: color.value }}
                                             title={color.name}
                                         />
                                     ))}
