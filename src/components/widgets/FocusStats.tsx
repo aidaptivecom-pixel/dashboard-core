@@ -1,10 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Play, Target } from "lucide-react";
+import { Play, Target, Pause } from "lucide-react";
 import { mockUser, mockFocusData } from "@/lib/mock-data";
 
-export function FocusStats() {
+interface FocusStatsProps {
+    onStartFocus?: () => void;
+}
+
+export function FocusStats({ onStartFocus }: FocusStatsProps) {
     const { focusGoalHours, focusCompletedHours } = mockUser;
     const progress = (focusCompletedHours / focusGoalHours) * 100;
     const circumference = 2 * Math.PI * 45;
@@ -80,7 +84,10 @@ export function FocusStats() {
                 </div>
             </div>
 
-            <button className="btn-primary w-full mt-4">
+            <button 
+                onClick={onStartFocus}
+                className="btn-primary w-full mt-4"
+            >
                 <Play className="h-4 w-4 mr-2" />
                 Start Focus Session
             </button>
