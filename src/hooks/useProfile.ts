@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -11,9 +11,9 @@ export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
+    const supabase = createClient();
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     
@@ -34,13 +34,14 @@ export function useProfile() {
       setProfile(data);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [fetchProfile]);
 
   const updateProfile = async (updates: ProfileUpdate) => {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -12,9 +12,9 @@ export function useEvents(dateRange?: { start: string; end: string }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
+    const supabase = createClient();
     setLoading(true);
     let query = supabase
       .from('events')
@@ -34,11 +34,12 @@ export function useEvents(dateRange?: { start: string; end: string }) {
       setEvents(data || []);
     }
     setLoading(false);
-  };
+  }, [dateRange]);
 
   useEffect(() => {
     fetchEvents();
 
+    const supabase = createClient();
     const channel = supabase
       .channel('events_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, () => {
@@ -49,15 +50,21 @@ export function useEvents(dateRange?: { start: string; end: string }) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [dateRange?.start, dateRange?.end]);
+  }, [fetchEvents]);
 
   const createEvent = async (event: Omit<EventInsert, 'user_id'>) => {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
+    const insertData: EventInsert = {
+      ...event,
+      user_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('events')
-      .insert({ ...event, user_id: user.id })
+      .insert(insertData)
       .select()
       .single();
 
@@ -68,6 +75,7 @@ export function useEvents(dateRange?: { start: string; end: string }) {
   };
 
   const updateEvent = async (id: string, updates: EventUpdate) => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('events')
       .update(updates)
@@ -82,6 +90,7 @@ export function useEvents(dateRange?: { start: string; end: string }) {
   };
 
   const deleteEvent = async (id: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from('events')
       .delete()

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -11,9 +11,9 @@ export function useCaptures() {
   const [captures, setCaptures] = useState<Capture[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchCaptures = async () => {
+  const fetchCaptures = useCallback(async () => {
+    const supabase = createClient();
     setLoading(true);
     const { data, error } = await supabase
       .from('captures')
@@ -26,11 +26,12 @@ export function useCaptures() {
       setCaptures(data || []);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchCaptures();
 
+    const supabase = createClient();
     const channel = supabase
       .channel('captures_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'captures' }, () => {
@@ -41,15 +42,21 @@ export function useCaptures() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchCaptures]);
 
   const createCapture = async (capture: Omit<CaptureInsert, 'user_id'>) => {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
+    const insertData: CaptureInsert = {
+      ...capture,
+      user_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('captures')
-      .insert({ ...capture, user_id: user.id })
+      .insert(insertData)
       .select()
       .single();
 
@@ -60,6 +67,7 @@ export function useCaptures() {
   };
 
   const deleteCapture = async (id: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from('captures')
       .delete()
@@ -72,6 +80,7 @@ export function useCaptures() {
   };
 
   const markAsProcessed = async (id: string, spaceId?: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from('captures')
       .update({ processed: true, suggested_space_id: spaceId })

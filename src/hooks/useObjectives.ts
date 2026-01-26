@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -12,15 +12,15 @@ export function useObjectives(goalId?: string) {
   const [objectives, setObjectives] = useState<Objective[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchObjectives = async () => {
+  const fetchObjectives = useCallback(async () => {
     if (!goalId) {
       setObjectives([]);
       setLoading(false);
       return;
     }
     
+    const supabase = createClient();
     setLoading(true);
     const { data, error } = await supabase
       .from('objectives')
@@ -34,11 +34,12 @@ export function useObjectives(goalId?: string) {
       setObjectives(data || []);
     }
     setLoading(false);
-  };
+  }, [goalId]);
 
   useEffect(() => {
     fetchObjectives();
 
+    const supabase = createClient();
     const channel = supabase
       .channel(`objectives_${goalId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'objectives' }, () => {
@@ -49,14 +50,20 @@ export function useObjectives(goalId?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [goalId]);
+  }, [fetchObjectives, goalId]);
 
   const createObjective = async (objective: Omit<ObjectiveInsert, 'goal_id'>) => {
     if (!goalId) return { error: 'No goal ID' };
 
+    const supabase = createClient();
+    const insertData: ObjectiveInsert = {
+      ...objective,
+      goal_id: goalId,
+    };
+
     const { data, error } = await supabase
       .from('objectives')
-      .insert({ ...objective, goal_id: goalId })
+      .insert(insertData)
       .select()
       .single();
 
@@ -67,6 +74,7 @@ export function useObjectives(goalId?: string) {
   };
 
   const updateObjective = async (id: string, updates: ObjectiveUpdate) => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('objectives')
       .update(updates)
@@ -81,6 +89,7 @@ export function useObjectives(goalId?: string) {
   };
 
   const deleteObjective = async (id: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from('objectives')
       .delete()

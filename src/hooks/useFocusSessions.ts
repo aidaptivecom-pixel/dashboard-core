@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -11,9 +11,9 @@ export function useFocusSessions() {
   const [sessions, setSessions] = useState<FocusSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchSessions = async () => {
+  const fetchSessions = useCallback(async () => {
+    const supabase = createClient();
     setLoading(true);
     const { data, error } = await supabase
       .from('focus_sessions')
@@ -27,11 +27,12 @@ export function useFocusSessions() {
       setSessions(data || []);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchSessions();
 
+    const supabase = createClient();
     const channel = supabase
       .channel('focus_sessions_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'focus_sessions' }, () => {
@@ -42,15 +43,21 @@ export function useFocusSessions() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchSessions]);
 
   const startSession = async (session: Omit<FocusSessionInsert, 'user_id'>) => {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
+    const insertData: FocusSessionInsert = {
+      ...session,
+      user_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('focus_sessions')
-      .insert({ ...session, user_id: user.id })
+      .insert(insertData)
       .select()
       .single();
 
@@ -61,6 +68,7 @@ export function useFocusSessions() {
   };
 
   const endSession = async (id: string, completed: boolean) => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('focus_sessions')
       .update({
@@ -77,7 +85,6 @@ export function useFocusSessions() {
     return { data, error };
   };
 
-  // Stats
   const todaySessions = sessions.filter(s => {
     const today = new Date().toDateString();
     return new Date(s.started_at).toDateString() === today;

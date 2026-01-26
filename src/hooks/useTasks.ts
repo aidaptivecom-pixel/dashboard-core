@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -12,9 +12,9 @@ export function useTasks(spaceId?: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
+    const supabase = createClient();
     setLoading(true);
     let query = supabase
       .from('tasks')
@@ -33,11 +33,12 @@ export function useTasks(spaceId?: string) {
       setTasks(data || []);
     }
     setLoading(false);
-  };
+  }, [spaceId]);
 
   useEffect(() => {
     fetchTasks();
 
+    const supabase = createClient();
     const channel = supabase
       .channel('tasks_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => {
@@ -48,15 +49,21 @@ export function useTasks(spaceId?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [spaceId]);
+  }, [fetchTasks]);
 
   const createTask = async (task: Omit<TaskInsert, 'user_id'>) => {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
+    const insertData: TaskInsert = {
+      ...task,
+      user_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('tasks')
-      .insert({ ...task, user_id: user.id })
+      .insert(insertData)
       .select()
       .single();
 
@@ -67,6 +74,7 @@ export function useTasks(spaceId?: string) {
   };
 
   const updateTask = async (id: string, updates: TaskUpdate) => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('tasks')
       .update(updates)
@@ -91,6 +99,7 @@ export function useTasks(spaceId?: string) {
   };
 
   const deleteTask = async (id: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from('tasks')
       .delete()

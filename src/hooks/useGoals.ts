@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -12,9 +12,9 @@ export function useGoals(spaceId?: string) {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchGoals = async () => {
+  const fetchGoals = useCallback(async () => {
+    const supabase = createClient();
     setLoading(true);
     let query = supabase
       .from('goals')
@@ -33,11 +33,12 @@ export function useGoals(spaceId?: string) {
       setGoals(data || []);
     }
     setLoading(false);
-  };
+  }, [spaceId]);
 
   useEffect(() => {
     fetchGoals();
 
+    const supabase = createClient();
     const channel = supabase
       .channel('goals_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, () => {
@@ -48,15 +49,21 @@ export function useGoals(spaceId?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [spaceId]);
+  }, [fetchGoals]);
 
   const createGoal = async (goal: Omit<GoalInsert, 'user_id'>) => {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
+    const insertData: GoalInsert = {
+      ...goal,
+      user_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('goals')
-      .insert({ ...goal, user_id: user.id })
+      .insert(insertData)
       .select()
       .single();
 
@@ -67,6 +74,7 @@ export function useGoals(spaceId?: string) {
   };
 
   const updateGoal = async (id: string, updates: GoalUpdate) => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('goals')
       .update(updates)
@@ -81,6 +89,7 @@ export function useGoals(spaceId?: string) {
   };
 
   const deleteGoal = async (id: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from('goals')
       .delete()

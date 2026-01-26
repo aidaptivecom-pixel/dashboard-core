@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Database } from '@/types/database';
 
@@ -12,9 +12,9 @@ export function useSpaces() {
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const supabase = createClient();
 
-  const fetchSpaces = async () => {
+  const fetchSpaces = useCallback(async () => {
+    const supabase = createClient();
     setLoading(true);
     const { data, error } = await supabase
       .from('spaces')
@@ -27,12 +27,12 @@ export function useSpaces() {
       setSpaces(data || []);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchSpaces();
 
-    // Realtime subscription
+    const supabase = createClient();
     const channel = supabase
       .channel('spaces_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'spaces' }, () => {
@@ -43,15 +43,21 @@ export function useSpaces() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchSpaces]);
 
   const createSpace = async (space: Omit<SpaceInsert, 'user_id'>) => {
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
+    const insertData: SpaceInsert = {
+      ...space,
+      user_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from('spaces')
-      .insert({ ...space, user_id: user.id })
+      .insert(insertData)
       .select()
       .single();
 
@@ -62,6 +68,7 @@ export function useSpaces() {
   };
 
   const updateSpace = async (id: string, updates: SpaceUpdate) => {
+    const supabase = createClient();
     const { data, error } = await supabase
       .from('spaces')
       .update(updates)
@@ -76,6 +83,7 @@ export function useSpaces() {
   };
 
   const deleteSpace = async (id: string) => {
+    const supabase = createClient();
     const { error } = await supabase
       .from('spaces')
       .delete()
