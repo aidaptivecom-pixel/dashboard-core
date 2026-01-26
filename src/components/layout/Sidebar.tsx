@@ -20,6 +20,8 @@ import {
     User,
     ChevronDown,
     Plus,
+    Brain,
+    BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,11 +40,16 @@ interface Space {
     color: string;
 }
 
-const navItems: NavItem[] = [
+const mainNavItems: NavItem[] = [
     { icon: Home, label: "Inicio", href: "/" },
     { icon: Inbox, label: "Captura", href: "/capture", badge: 3 },
     { icon: Calendar, label: "Calendario", href: "/calendar" },
     { icon: Target, label: "Objetivos", href: "/goals" },
+    { icon: Brain, label: "Focus", href: "/focus" },
+    { icon: BarChart3, label: "Progreso", href: "/stats" },
+];
+
+const bottomNavItems: NavItem[] = [
     { icon: Settings, label: "Ajustes", href: "/settings" },
 ];
 
@@ -104,7 +111,7 @@ export function Sidebar() {
             {/* Main Navigation */}
             <nav className="px-3 py-2">
                 <ul className="space-y-1">
-                    {navItems.slice(0, 2).map((item) => {
+                    {mainNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <li key={item.label} className="relative">
@@ -228,7 +235,7 @@ export function Sidebar() {
             {/* Bottom Navigation */}
             <div className="px-3 py-2 border-t border-border">
                 <ul className="space-y-1">
-                    {navItems.slice(2).map((item) => {
+                    {bottomNavItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <li key={item.label}>
