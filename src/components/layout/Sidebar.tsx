@@ -8,12 +8,14 @@ import {
     Home,
     FolderKanban,
     Inbox,
+    Image,
     BarChart3,
     Settings,
     ChevronLeft,
     ChevronRight,
     Sparkles,
     HelpCircle,
+    Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,12 +23,14 @@ interface NavItem {
     icon: React.ElementType;
     label: string;
     href: string;
+    badge?: number;
 }
 
 const navItems: NavItem[] = [
     { icon: Home, label: "Home", href: "/" },
+    { icon: Inbox, label: "Inbox", href: "/inbox", badge: 5 },
     { icon: FolderKanban, label: "Projects", href: "/projects" },
-    { icon: Inbox, label: "Capture Vault", href: "/capture" },
+    { icon: Image, label: "Capture", href: "/capture" },
     { icon: BarChart3, label: "Insights", href: "/insights" },
     { icon: Settings, label: "Settings", href: "/settings" },
 ];
@@ -61,10 +65,11 @@ export function Sidebar() {
                 </AnimatePresence>
             </div>
 
-            {/* Search - Like Neura reference */}
+            {/* Search */}
             {!collapsed && (
                 <div className="px-3 py-3">
                     <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground rounded-lg border border-border hover:bg-accent transition-colors">
+                        <Search className="h-4 w-4" />
                         <span>Search...</span>
                         <kbd className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
                     </button>
@@ -95,12 +100,22 @@ export function Sidebar() {
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
                                                 exit={{ opacity: 0, x: -10 }}
-                                                className="truncate"
+                                                className="flex-1 truncate"
                                             >
                                                 {item.label}
                                             </motion.span>
                                         )}
                                     </AnimatePresence>
+                                    {!collapsed && item.badge && (
+                                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-coral text-white text-xs font-medium px-1.5">
+                                            {item.badge}
+                                        </span>
+                                    )}
+                                    {collapsed && item.badge && (
+                                        <span className="absolute left-12 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral text-white text-[10px] font-medium">
+                                            {item.badge}
+                                        </span>
+                                    )}
                                 </Link>
                             </li>
                         );
@@ -108,7 +123,7 @@ export function Sidebar() {
                 </ul>
             </nav>
 
-            {/* Help & Support - Like Neura */}
+            {/* Help & Support */}
             <div className="px-3 py-2 border-t border-border">
                 <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                     <HelpCircle className="h-5 w-5 flex-shrink-0" />
