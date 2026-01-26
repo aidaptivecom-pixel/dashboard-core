@@ -7,8 +7,8 @@ import { FocusNowCard } from "@/components/widgets/FocusNowCard";
 import { TodaysTasks } from "@/components/widgets/TodaysTasks";
 import { EnergyCheckin } from "@/components/widgets/EnergyCheckin";
 import { FocusStats } from "@/components/widgets/FocusStats";
-import { ProductivityTrends } from "@/components/widgets/ProductivityTrends";
-import { ScreenTime } from "@/components/widgets/ScreenTime";
+import { InboxCounter } from "@/components/widgets/InboxCounter";
+import { NextEvent } from "@/components/widgets/NextEvent";
 import { QuickCaptureModal } from "@/components/modals/QuickCaptureModal";
 import { FocusModeOverlay } from "@/components/modals/FocusModeOverlay";
 
@@ -23,46 +23,45 @@ export default function Home() {
                 e.preventDefault();
                 setIsCaptureOpen(true);
             }
+            // Escape to close focus mode
+            if (e.key === "Escape" && isFocusModeOpen) {
+                setIsFocusModeOpen(false);
+            }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
+    }, [isFocusModeOpen]);
 
     return (
         <>
             <MainLayout>
-                <div className="max-w-6xl mx-auto">
+                <div className="max-w-5xl mx-auto">
                     {/* Welcome Header */}
                     <WelcomeHeader
                         onOpenCapture={() => setIsCaptureOpen(true)}
                         onOpenSearch={() => setIsCaptureOpen(true)}
                     />
 
-                    {/* Main Content Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                        {/* Left Column */}
-                        <div className="space-y-4 md:space-y-6">
-                            {/* Focus Now Card - Hero */}
-                            <FocusNowCard />
+                    {/* Main Content - Simplified Layout */}
+                    <div className="space-y-4 md:space-y-6">
+                        
+                        {/* Row 1: Focus Now Card - Hero */}
+                        <FocusNowCard />
 
-                            {/* Today's Tasks */}
-                            <TodaysTasks />
-
-                            {/* Productivity Trends */}
-                            <ProductivityTrends />
+                        {/* Row 2: Energy + Focus Stats */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <EnergyCheckin />
+                            <FocusStats onStartFocus={() => setIsFocusModeOpen(true)} />
                         </div>
 
-                        {/* Right Column */}
-                        <div className="space-y-4 md:space-y-6">
-                            {/* Energy Check-in */}
-                            <EnergyCheckin />
+                        {/* Row 3: Today's Tasks - Main List */}
+                        <TodaysTasks />
 
-                            {/* Focus Stats */}
-                            <FocusStats />
-
-                            {/* Screen Time */}
-                            <ScreenTime />
+                        {/* Row 4: Quick Info - Inbox + Next Event */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <InboxCounter count={3} />
+                            <NextEvent />
                         </div>
                     </div>
                 </div>
