@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Folder, Inbox, Calendar, Target, Settings, ChevronLeft, ChevronRight, Search, Sparkles, Building2, Rocket, User, ChevronDown, Plus, Brain, BarChart3, LogOut, X } from "lucide-react";
+import { Home, Folder, Inbox, Calendar, Target, Settings, ChevronLeft, ChevronRight, Search, Sparkles, ChevronDown, Plus, Brain, BarChart3, LogOut, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSpaces } from "@/hooks/useSpaces";
 import { useCaptures } from "@/hooks/useCaptures";
@@ -281,7 +281,16 @@ export function Sidebar() {
                                         <label className="text-sm font-medium mb-2 block">Color</label>
                                         <div className="flex gap-2">
                                             {colorOptions.map((color) => (
-                                                <button key={color.value} onClick={() => setNewSpaceColor(color.value)} className={cn("w-8 h-8 rounded-full transition-all", newSpaceColor === color.value ? "ring-2 ring-offset-2 ring-offset-background" : "hover:scale-110")} style={{ backgroundColor: color.value, ringColor: color.value }} title={color.name} />
+                                                <button 
+                                                    key={color.value} 
+                                                    onClick={() => setNewSpaceColor(color.value)} 
+                                                    className={cn(
+                                                        "w-8 h-8 rounded-full transition-all",
+                                                        newSpaceColor === color.value ? "ring-2 ring-offset-2 ring-offset-background ring-primary scale-110" : "hover:scale-110"
+                                                    )} 
+                                                    style={{ backgroundColor: color.value }} 
+                                                    title={color.name} 
+                                                />
                                             ))}
                                         </div>
                                     </div>
