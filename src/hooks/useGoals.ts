@@ -2,11 +2,21 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type Goal = Database['public']['Tables']['goals']['Row'];
-type GoalInsert = Database['public']['Tables']['goals']['Insert'];
-type GoalUpdate = Database['public']['Tables']['goals']['Update'];
+interface Goal {
+  id: string;
+  user_id: string;
+  space_id: string | null;
+  title: string;
+  description: string | null;
+  color: string | null;
+  progress: number | null;
+  due_date: string | null;
+  status: 'active' | 'completed' | 'paused' | null;
+  sort_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export function useGoals(spaceId?: string) {
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -30,7 +40,7 @@ export function useGoals(spaceId?: string) {
     if (error) {
       setError(error.message);
     } else {
-      setGoals(data || []);
+      setGoals((data as Goal[]) || []);
     }
     setLoading(false);
   }, [spaceId]);
@@ -51,29 +61,33 @@ export function useGoals(spaceId?: string) {
     };
   }, [fetchGoals]);
 
-  const createGoal = async (goal: Omit<GoalInsert, 'user_id'>) => {
+  const createGoal = async (goal: { title: string; description?: string; space_id?: string; color?: string; due_date?: string }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
-    const insertData: GoalInsert = {
-      ...goal,
-      user_id: user.id,
-    };
-
     const { data, error } = await supabase
       .from('goals')
-      .insert(insertData)
+      .insert({
+        user_id: user.id,
+        title: goal.title,
+        description: goal.description || null,
+        space_id: goal.space_id || null,
+        color: goal.color || null,
+        due_date: goal.due_date || null,
+        status: 'active',
+        progress: 0,
+      })
       .select()
       .single();
 
     if (!error && data) {
-      setGoals(prev => [...prev, data]);
+      setGoals(prev => [...prev, data as Goal]);
     }
     return { data, error };
   };
 
-  const updateGoal = async (id: string, updates: GoalUpdate) => {
+  const updateGoal = async (id: string, updates: Partial<Goal>) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('goals')
@@ -83,7 +97,7 @@ export function useGoals(spaceId?: string) {
       .single();
 
     if (!error && data) {
-      setGoals(prev => prev.map(g => g.id === id ? data : g));
+      setGoals(prev => prev.map(g => g.id === id ? data as Goal : g));
     }
     return { data, error };
   };

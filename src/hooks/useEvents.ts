@@ -2,11 +2,22 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type Event = Database['public']['Tables']['events']['Row'];
-type EventInsert = Database['public']['Tables']['events']['Insert'];
-type EventUpdate = Database['public']['Tables']['events']['Update'];
+interface Event {
+  id: string;
+  user_id: string;
+  space_id: string | null;
+  title: string;
+  description: string | null;
+  type: 'task' | 'meeting' | 'call' | 'deadline' | 'reminder' | null;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  all_day: boolean | null;
+  color: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export function useEvents(dateRange?: { start: string; end: string }) {
   const [events, setEvents] = useState<Event[]>([]);
@@ -31,7 +42,7 @@ export function useEvents(dateRange?: { start: string; end: string }) {
     if (error) {
       setError(error.message);
     } else {
-      setEvents(data || []);
+      setEvents((data as Event[]) || []);
     }
     setLoading(false);
   }, [dateRange]);
@@ -52,29 +63,31 @@ export function useEvents(dateRange?: { start: string; end: string }) {
     };
   }, [fetchEvents]);
 
-  const createEvent = async (event: Omit<EventInsert, 'user_id'>) => {
+  const createEvent = async (event: { title: string; date: string; start_time?: string; end_time?: string; type?: Event['type'] }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
-    const insertData: EventInsert = {
-      ...event,
-      user_id: user.id,
-    };
-
     const { data, error } = await supabase
       .from('events')
-      .insert(insertData)
+      .insert({
+        user_id: user.id,
+        title: event.title,
+        date: event.date,
+        start_time: event.start_time || null,
+        end_time: event.end_time || null,
+        type: event.type || null,
+      })
       .select()
       .single();
 
     if (!error && data) {
-      setEvents(prev => [...prev, data].sort((a, b) => a.date.localeCompare(b.date)));
+      setEvents(prev => [...prev, data as Event].sort((a, b) => a.date.localeCompare(b.date)));
     }
     return { data, error };
   };
 
-  const updateEvent = async (id: string, updates: EventUpdate) => {
+  const updateEvent = async (id: string, updates: Partial<Event>) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('events')
@@ -84,7 +97,7 @@ export function useEvents(dateRange?: { start: string; end: string }) {
       .single();
 
     if (!error && data) {
-      setEvents(prev => prev.map(e => e.id === id ? data : e));
+      setEvents(prev => prev.map(e => e.id === id ? data as Event : e));
     }
     return { data, error };
   };

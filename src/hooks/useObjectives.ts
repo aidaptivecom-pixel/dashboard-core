@@ -2,11 +2,17 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type Objective = Database['public']['Tables']['objectives']['Row'];
-type ObjectiveInsert = Database['public']['Tables']['objectives']['Insert'];
-type ObjectiveUpdate = Database['public']['Tables']['objectives']['Update'];
+interface Objective {
+  id: string;
+  goal_id: string;
+  title: string;
+  progress: number | null;
+  due_date: string | null;
+  sort_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export function useObjectives(goalId?: string) {
   const [objectives, setObjectives] = useState<Objective[]>([]);
@@ -31,7 +37,7 @@ export function useObjectives(goalId?: string) {
     if (error) {
       setError(error.message);
     } else {
-      setObjectives(data || []);
+      setObjectives((data as Objective[]) || []);
     }
     setLoading(false);
   }, [goalId]);
@@ -52,28 +58,27 @@ export function useObjectives(goalId?: string) {
     };
   }, [fetchObjectives, goalId]);
 
-  const createObjective = async (objective: Omit<ObjectiveInsert, 'goal_id'>) => {
+  const createObjective = async (objective: { title: string; due_date?: string }) => {
     if (!goalId) return { error: 'No goal ID' };
 
     const supabase = createClient();
-    const insertData: ObjectiveInsert = {
-      ...objective,
-      goal_id: goalId,
-    };
-
     const { data, error } = await supabase
       .from('objectives')
-      .insert(insertData)
+      .insert({
+        goal_id: goalId,
+        title: objective.title,
+        due_date: objective.due_date || null,
+      })
       .select()
       .single();
 
     if (!error && data) {
-      setObjectives(prev => [...prev, data]);
+      setObjectives(prev => [...prev, data as Objective]);
     }
     return { data, error };
   };
 
-  const updateObjective = async (id: string, updates: ObjectiveUpdate) => {
+  const updateObjective = async (id: string, updates: Partial<Objective>) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('objectives')
@@ -83,7 +88,7 @@ export function useObjectives(goalId?: string) {
       .single();
 
     if (!error && data) {
-      setObjectives(prev => prev.map(o => o.id === id ? data : o));
+      setObjectives(prev => prev.map(o => o.id === id ? data as Objective : o));
     }
     return { data, error };
   };

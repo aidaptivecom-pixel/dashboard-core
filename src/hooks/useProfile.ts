@@ -2,10 +2,18 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+interface Profile {
+  id: string;
+  name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  timezone: string | null;
+  language: string | null;
+  theme: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export function useProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -31,7 +39,7 @@ export function useProfile() {
     if (error) {
       setError(error.message);
     } else {
-      setProfile(data);
+      setProfile(data as Profile);
     }
     setLoading(false);
   }, []);
@@ -40,7 +48,7 @@ export function useProfile() {
     fetchProfile();
   }, [fetchProfile]);
 
-  const updateProfile = async (updates: ProfileUpdate) => {
+  const updateProfile = async (updates: Partial<Profile>) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
@@ -53,7 +61,7 @@ export function useProfile() {
       .single();
 
     if (!error && data) {
-      setProfile(data);
+      setProfile(data as Profile);
     }
     return { data, error };
   };

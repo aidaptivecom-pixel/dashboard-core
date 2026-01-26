@@ -2,11 +2,23 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type Task = Database['public']['Tables']['tasks']['Row'];
-type TaskInsert = Database['public']['Tables']['tasks']['Insert'];
-type TaskUpdate = Database['public']['Tables']['tasks']['Update'];
+interface Task {
+  id: string;
+  user_id: string;
+  space_id: string | null;
+  objective_id: string | null;
+  title: string;
+  description: string | null;
+  completed: boolean | null;
+  completed_at: string | null;
+  due_date: string | null;
+  due_time: string | null;
+  priority: 'low' | 'medium' | 'high' | 'urgent' | null;
+  sort_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export function useTasks(spaceId?: string) {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -30,7 +42,7 @@ export function useTasks(spaceId?: string) {
     if (error) {
       setError(error.message);
     } else {
-      setTasks(data || []);
+      setTasks((data as Task[]) || []);
     }
     setLoading(false);
   }, [spaceId]);
@@ -51,29 +63,30 @@ export function useTasks(spaceId?: string) {
     };
   }, [fetchTasks]);
 
-  const createTask = async (task: Omit<TaskInsert, 'user_id'>) => {
+  const createTask = async (task: { title: string; space_id?: string; due_date?: string; priority?: Task['priority'] }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
-    const insertData: TaskInsert = {
-      ...task,
-      user_id: user.id,
-    };
-
     const { data, error } = await supabase
       .from('tasks')
-      .insert(insertData)
+      .insert({
+        user_id: user.id,
+        title: task.title,
+        space_id: task.space_id || null,
+        due_date: task.due_date || null,
+        priority: task.priority || null,
+      })
       .select()
       .single();
 
     if (!error && data) {
-      setTasks(prev => [...prev, data]);
+      setTasks(prev => [...prev, data as Task]);
     }
     return { data, error };
   };
 
-  const updateTask = async (id: string, updates: TaskUpdate) => {
+  const updateTask = async (id: string, updates: Partial<Task>) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('tasks')
@@ -83,7 +96,7 @@ export function useTasks(spaceId?: string) {
       .single();
 
     if (!error && data) {
-      setTasks(prev => prev.map(t => t.id === id ? data : t));
+      setTasks(prev => prev.map(t => t.id === id ? data as Task : t));
     }
     return { data, error };
   };

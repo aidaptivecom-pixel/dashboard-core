@@ -2,10 +2,18 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type Capture = Database['public']['Tables']['captures']['Row'];
-type CaptureInsert = Database['public']['Tables']['captures']['Insert'];
+interface Capture {
+  id: string;
+  user_id: string;
+  type: 'note' | 'voice' | 'image' | 'link' | 'idea';
+  content: string;
+  transcription: string | null;
+  image_url: string | null;
+  suggested_space_id: string | null;
+  processed: boolean | null;
+  created_at: string | null;
+}
 
 export function useCaptures() {
   const [captures, setCaptures] = useState<Capture[]>([]);
@@ -23,7 +31,7 @@ export function useCaptures() {
     if (error) {
       setError(error.message);
     } else {
-      setCaptures(data || []);
+      setCaptures((data as Capture[]) || []);
     }
     setLoading(false);
   }, []);
@@ -44,24 +52,25 @@ export function useCaptures() {
     };
   }, [fetchCaptures]);
 
-  const createCapture = async (capture: Omit<CaptureInsert, 'user_id'>) => {
+  const createCapture = async (capture: { type: Capture['type']; content: string; transcription?: string; image_url?: string }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
-    const insertData: CaptureInsert = {
-      ...capture,
-      user_id: user.id,
-    };
-
     const { data, error } = await supabase
       .from('captures')
-      .insert(insertData)
+      .insert({
+        user_id: user.id,
+        type: capture.type,
+        content: capture.content,
+        transcription: capture.transcription || null,
+        image_url: capture.image_url || null,
+      })
       .select()
       .single();
 
     if (!error && data) {
-      setCaptures(prev => [data, ...prev]);
+      setCaptures(prev => [data as Capture, ...prev]);
     }
     return { data, error };
   };
@@ -83,7 +92,7 @@ export function useCaptures() {
     const supabase = createClient();
     const { error } = await supabase
       .from('captures')
-      .update({ processed: true, suggested_space_id: spaceId })
+      .update({ processed: true, suggested_space_id: spaceId || null })
       .eq('id', id);
 
     if (!error) {

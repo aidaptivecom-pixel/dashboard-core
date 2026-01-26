@@ -2,11 +2,19 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type Space = Database['public']['Tables']['spaces']['Row'];
-type SpaceInsert = Database['public']['Tables']['spaces']['Insert'];
-type SpaceUpdate = Database['public']['Tables']['spaces']['Update'];
+interface Space {
+  id: string;
+  user_id: string;
+  name: string;
+  icon: string | null;
+  color: string | null;
+  description: string | null;
+  is_default: boolean | null;
+  sort_order: number | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 export function useSpaces() {
   const [spaces, setSpaces] = useState<Space[]>([]);
@@ -24,7 +32,7 @@ export function useSpaces() {
     if (error) {
       setError(error.message);
     } else {
-      setSpaces(data || []);
+      setSpaces((data as Space[]) || []);
     }
     setLoading(false);
   }, []);
@@ -45,29 +53,30 @@ export function useSpaces() {
     };
   }, [fetchSpaces]);
 
-  const createSpace = async (space: Omit<SpaceInsert, 'user_id'>) => {
+  const createSpace = async (space: { name: string; icon?: string; color?: string; description?: string }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
-    const insertData: SpaceInsert = {
-      ...space,
-      user_id: user.id,
-    };
-
     const { data, error } = await supabase
       .from('spaces')
-      .insert(insertData)
+      .insert({
+        user_id: user.id,
+        name: space.name,
+        icon: space.icon || null,
+        color: space.color || null,
+        description: space.description || null,
+      })
       .select()
       .single();
 
     if (!error && data) {
-      setSpaces(prev => [...prev, data]);
+      setSpaces(prev => [...prev, data as Space]);
     }
     return { data, error };
   };
 
-  const updateSpace = async (id: string, updates: SpaceUpdate) => {
+  const updateSpace = async (id: string, updates: Partial<Space>) => {
     const supabase = createClient();
     const { data, error } = await supabase
       .from('spaces')
@@ -77,7 +86,7 @@ export function useSpaces() {
       .single();
 
     if (!error && data) {
-      setSpaces(prev => prev.map(s => s.id === id ? data : s));
+      setSpaces(prev => prev.map(s => s.id === id ? data as Space : s));
     }
     return { data, error };
   };

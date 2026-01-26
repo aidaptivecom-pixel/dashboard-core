@@ -2,10 +2,19 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Database } from '@/types/database';
 
-type FocusSession = Database['public']['Tables']['focus_sessions']['Row'];
-type FocusSessionInsert = Database['public']['Tables']['focus_sessions']['Insert'];
+interface FocusSession {
+  id: string;
+  user_id: string;
+  task_id: string | null;
+  space_id: string | null;
+  type: 'focus' | 'short_break' | 'long_break';
+  duration_minutes: number;
+  started_at: string;
+  ended_at: string | null;
+  completed: boolean | null;
+  created_at: string | null;
+}
 
 export function useFocusSessions() {
   const [sessions, setSessions] = useState<FocusSession[]>([]);
@@ -24,7 +33,7 @@ export function useFocusSessions() {
     if (error) {
       setError(error.message);
     } else {
-      setSessions(data || []);
+      setSessions((data as FocusSession[]) || []);
     }
     setLoading(false);
   }, []);
@@ -45,24 +54,24 @@ export function useFocusSessions() {
     };
   }, [fetchSessions]);
 
-  const startSession = async (session: Omit<FocusSessionInsert, 'user_id'>) => {
+  const startSession = async (session: { type: FocusSession['type']; duration_minutes: number }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: 'Not authenticated' };
 
-    const insertData: FocusSessionInsert = {
-      ...session,
-      user_id: user.id,
-    };
-
     const { data, error } = await supabase
       .from('focus_sessions')
-      .insert(insertData)
+      .insert({
+        user_id: user.id,
+        type: session.type,
+        duration_minutes: session.duration_minutes,
+        started_at: new Date().toISOString(),
+      })
       .select()
       .single();
 
     if (!error && data) {
-      setSessions(prev => [data, ...prev]);
+      setSessions(prev => [data as FocusSession, ...prev]);
     }
     return { data, error };
   };
@@ -80,7 +89,7 @@ export function useFocusSessions() {
       .single();
 
     if (!error && data) {
-      setSessions(prev => prev.map(s => s.id === id ? data : s));
+      setSessions(prev => prev.map(s => s.id === id ? data as FocusSession : s));
     }
     return { data, error };
   };
