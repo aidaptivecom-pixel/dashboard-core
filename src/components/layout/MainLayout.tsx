@@ -3,6 +3,7 @@
 import { Sidebar } from "./Sidebar";
 import { RightPanel } from "./RightPanel";
 import { MobileNav } from "./MobileNav";
+import { Header } from "./Header";
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -20,11 +21,17 @@ export function MainLayout({ children }: MainLayoutProps) {
                     </div>
 
                     {/* Main Content Area */}
-                    <main className="flex-1 overflow-y-auto custom-scrollbar">
-                        <div className="p-6 lg:p-8">
-                            {children}
-                        </div>
-                    </main>
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        {/* Header with breadcrumbs and search */}
+                        <Header />
+                        
+                        {/* Page content */}
+                        <main className="flex-1 overflow-y-auto custom-scrollbar">
+                            <div className="p-6 lg:p-8 pb-24 md:pb-8">
+                                {children}
+                            </div>
+                        </main>
+                    </div>
 
                     {/* Right Panel - Desktop Only - Inside the card */}
                     <div className="hidden xl:block flex-shrink-0 border-l border-border">
