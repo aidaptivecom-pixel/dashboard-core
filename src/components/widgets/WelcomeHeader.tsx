@@ -3,9 +3,7 @@
 import { Search, Plus, Mic, Command } from "lucide-react";
 import { getGreeting, formatDate } from "@/lib/utils";
 import { mockUser } from "@/lib/mock-data";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { LiveClock } from "@/components/ui/LiveClock";
-import { LanguageSelector } from "@/components/ui/LanguageSelector";
 
 interface WelcomeHeaderProps {
     onOpenCapture: () => void;
@@ -66,12 +64,6 @@ export function WelcomeHeader({ onOpenCapture, onOpenSearch }: WelcomeHeaderProp
                     <button className="p-2.5 rounded-xl border border-border hover:bg-accent transition-colors">
                         <Mic className="h-4 w-4" />
                     </button>
-
-                    {/* Language Selector */}
-                    <LanguageSelector compact />
-
-                    {/* Theme Toggle */}
-                    <ThemeToggle />
                 </div>
             </div>
         </div>
