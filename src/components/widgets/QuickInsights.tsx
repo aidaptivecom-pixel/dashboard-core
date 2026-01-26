@@ -13,7 +13,7 @@ export function QuickInsights() {
     };
 
     return (
-        <div className="glass-card p-5">
+        <div className="glass-card p-5 flex-shrink-0">
             <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-5 w-5 text-yellow-500" />
                 <h3 className="font-semibold">Quick Insights</h3>
@@ -32,11 +32,11 @@ export function QuickInsights() {
                                 transition={{ delay: index * 0.1 }}
                                 className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 group"
                             >
-                                <span className="text-lg">{insight.icon}</span>
-                                <p className="flex-1 text-sm">{insight.message}</p>
+                                <span className="text-lg flex-shrink-0">{insight.icon}</span>
+                                <p className="flex-1 text-sm leading-relaxed">{insight.message}</p>
                                 <button
                                     onClick={() => dismissInsight(insight.id)}
-                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded transition-all"
+                                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-accent rounded transition-all flex-shrink-0"
                                 >
                                     <X className="h-3.5 w-3.5 text-muted-foreground" />
                                 </button>
