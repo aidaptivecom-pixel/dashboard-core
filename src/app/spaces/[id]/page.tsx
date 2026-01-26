@@ -14,19 +14,22 @@ import {
     Grid,
     List,
     MoreHorizontal,
-    ChevronRight,
     Upload,
     FolderPlus,
     Star,
-    Clock,
     ArrowUpDown,
     StickyNote,
     FileCode,
     Presentation,
     Bot,
+    Sparkles,
+    Copy,
+    Check,
+    X,
+    Download,
+    RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
 
 interface SpaceItem {
     id: string;
@@ -35,6 +38,7 @@ interface SpaceItem {
     updatedAt: string;
     starred?: boolean;
     size?: string;
+    content?: string;
 }
 
 interface SpaceData {
@@ -45,6 +49,12 @@ interface SpaceData {
     color: string;
     description: string;
     items: SpaceItem[];
+    context?: {
+        summary: string;
+        keyInfo: string[];
+        activeProjects: string[];
+        recentActivity: string[];
+    };
 }
 
 const spacesData: Record<string, SpaceData> = {
@@ -65,6 +75,26 @@ const spacesData: Record<string, SpaceData> = {
             { id: "7", name: "Scripts Automatización", type: "code", updatedAt: "Hace 4h" },
             { id: "8", name: "Logo y Assets", type: "folder", updatedAt: "Hace 2w" },
         ],
+        context: {
+            summary: "Aidaptive es mi negocio de consultoría en automatización e inteligencia artificial. Ofrezco servicios de automatización de procesos, integración de IA y desarrollo de soluciones personalizadas para empresas.",
+            keyInfo: [
+                "Servicios principales: Automatización con n8n, Make, Zapier",
+                "Integración de Claude/ChatGPT en flujos de trabajo",
+                "Desarrollo de chatbots y asistentes virtuales",
+                "Consultoría en transformación digital",
+                "Stack técnico: n8n, Supabase, Next.js, Python",
+            ],
+            activeProjects: [
+                "Cliente ABC: CRM automatizado con IA",
+                "Cliente XYZ: Chatbot de atención al cliente",
+                "Desarrollo de plantillas n8n para vender",
+            ],
+            recentActivity: [
+                "Propuesta enviada a nuevo lead (hace 2h)",
+                "Actualización de scripts de automatización (hace 4h)",
+                "Reunión con cliente ABC (ayer)",
+            ],
+        },
     },
     igreen: {
         id: "igreen",
@@ -79,6 +109,24 @@ const spacesData: Record<string, SpaceData> = {
             { id: "3", name: "Fotos Productos", type: "folder", updatedAt: "Hace 3d" },
             { id: "4", name: "Precios y Costos", type: "document", updatedAt: "Hace 1w" },
         ],
+        context: {
+            summary: "iGreen es mi emprendimiento de venta de plantas y productos sustentables. Vendo principalmente plantas de interior, macetas ecológicas y kits de jardinería.",
+            keyInfo: [
+                "Venta por Instagram y WhatsApp",
+                "Zona de entrega: CABA y GBA Norte",
+                "Proveedores principales en zona sur",
+                "Margen objetivo: 40-50%",
+            ],
+            activeProjects: [
+                "Organizar inventario actual",
+                "Fotografiar todos los productos",
+                "Definir precios actualizados",
+            ],
+            recentActivity: [
+                "Nuevo lote de suculentas (hace 2h)",
+                "3 ventas esta semana",
+            ],
+        },
     },
     limbo: {
         id: "limbo",
@@ -93,6 +141,24 @@ const spacesData: Record<string, SpaceData> = {
             { id: "3", name: "Wireframes", type: "image", updatedAt: "Hace 2d" },
             { id: "4", name: "Componentes React", type: "code", updatedAt: "Hace 1d" },
         ],
+        context: {
+            summary: "Limbo es un proyecto de landing page/producto que estoy desarrollando. El objetivo es crear una plataforma o servicio (aún en definición) con una landing page atractiva para captar usuarios en waitlist.",
+            keyInfo: [
+                "Stack: Next.js, Tailwind, Framer Motion",
+                "Objetivo: Landing + Waitlist funcional",
+                "Estilo visual: Moderno, minimalista, gradientes",
+                "Hosting: Vercel",
+            ],
+            activeProjects: [
+                "Diseño del hero section",
+                "Implementación de componentes",
+                "Sistema de waitlist con Supabase",
+            ],
+            recentActivity: [
+                "Diseño de features section (hace 1h)",
+                "Setup del proyecto Next.js (hace 1d)",
+            ],
+        },
     },
     personal: {
         id: "personal",
@@ -106,6 +172,18 @@ const spacesData: Record<string, SpaceData> = {
             { id: "2", name: "Lecturas", type: "folder", updatedAt: "Hace 1w" },
             { id: "3", name: "Reflexiones", type: "note", updatedAt: "Hace 3d" },
         ],
+        context: {
+            summary: "Espacio personal para ideas, reflexiones y contenido que no pertenece a ningún proyecto específico.",
+            keyInfo: [
+                "Ideas de nuevos proyectos",
+                "Notas de libros y artículos",
+                "Reflexiones personales",
+            ],
+            activeProjects: [],
+            recentActivity: [
+                "Nueva idea capturada (hace 2h)",
+            ],
+        },
     },
 };
 
@@ -141,6 +219,9 @@ export default function SpacePage() {
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState<"name" | "date">("date");
+    const [isContextModalOpen, setIsContextModalOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     if (!space) {
         return (
@@ -156,11 +237,72 @@ export default function SpacePage() {
         .filter(item => item.name.toLowerCase().includes(searchQuery.toLowerCase()))
         .sort((a, b) => {
             if (sortBy === "name") return a.name.localeCompare(b.name);
-            return 0; // Keep original order for date (already sorted)
+            return 0;
         });
 
     const folders = filteredItems.filter(i => i.type === "folder");
     const files = filteredItems.filter(i => i.type !== "folder");
+
+    const generateContextText = () => {
+        if (!space.context) return "";
+        
+        const today = new Date().toLocaleDateString("es", { 
+            weekday: "long", 
+            day: "numeric", 
+            month: "long",
+            year: "numeric"
+        });
+
+        return `# Contexto: ${space.name} ${space.icon}
+Generado: ${today}
+
+## Resumen
+${space.context.summary}
+
+## Información clave
+${space.context.keyInfo.map(info => `- ${info}`).join("\n")}
+
+## Proyectos activos
+${space.context.activeProjects.length > 0 
+    ? space.context.activeProjects.map(p => `- ${p}`).join("\n")
+    : "- Sin proyectos activos actualmente"}
+
+## Actividad reciente
+${space.context.recentActivity.map(a => `- ${a}`).join("\n")}
+
+## Archivos en este espacio
+${space.items.map(item => `- ${item.type === "folder" ? "📁" : "📄"} ${item.name} (${item.updatedAt})`).join("\n")}
+
+---
+Este contexto fue generado por FocusFlow para usar con Claude.
+`;
+    };
+
+    const handleCopyContext = async () => {
+        const text = generateContextText();
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleDownloadContext = () => {
+        const text = generateContextText();
+        const blob = new Blob([text], { type: "text/markdown" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `contexto-${space.id}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const handleGenerateContext = () => {
+        setIsGenerating(true);
+        // Simular generación con IA
+        setTimeout(() => {
+            setIsGenerating(false);
+        }, 1500);
+    };
 
     return (
         <MainLayout>
@@ -195,8 +337,12 @@ export default function SpacePage() {
                             <Plus className="h-4 w-4" />
                             Nuevo
                         </button>
-                        <button className="p-2 rounded-xl border border-border hover:bg-accent transition-colors">
-                            <Bot className="h-5 w-5" />
+                        <button 
+                            onClick={() => setIsContextModalOpen(true)}
+                            className="p-2.5 rounded-xl border border-border hover:bg-accent hover:border-primary/30 transition-all group"
+                            title="Generar contexto para Claude"
+                        >
+                            <Bot className="h-5 w-5 group-hover:text-primary transition-colors" />
                         </button>
                     </div>
                 </div>
@@ -263,7 +409,6 @@ export default function SpacePage() {
                 {/* Content */}
                 {viewMode === "grid" ? (
                     <div className="space-y-6">
-                        {/* Folders */}
                         {folders.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Carpetas</h3>
@@ -277,6 +422,8 @@ export default function SpacePage() {
                                                 key={item.id}
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
                                                 className="group p-4 rounded-2xl border border-border bg-background hover:bg-accent hover:border-primary/20 transition-all text-left"
                                             >
                                                 <div className={cn("p-3 rounded-xl w-fit mb-3", colorClass)}>
@@ -291,7 +438,6 @@ export default function SpacePage() {
                             </div>
                         )}
 
-                        {/* Files */}
                         {files.length > 0 && (
                             <div>
                                 <h3 className="text-sm font-medium text-muted-foreground mb-3">Archivos</h3>
@@ -305,6 +451,8 @@ export default function SpacePage() {
                                                 key={item.id}
                                                 initial={{ opacity: 0, scale: 0.95 }}
                                                 animate={{ opacity: 1, scale: 1 }}
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
                                                 className="group p-4 rounded-2xl border border-border bg-background hover:bg-accent hover:border-primary/20 transition-all text-left relative"
                                             >
                                                 {item.starred && (
@@ -323,7 +471,6 @@ export default function SpacePage() {
                         )}
                     </div>
                 ) : (
-                    /* List View */
                     <div className="border border-border rounded-2xl overflow-hidden">
                         <div className="grid grid-cols-[1fr,auto,auto] gap-4 px-4 py-2 bg-muted/50 text-sm font-medium text-muted-foreground">
                             <span>Nombre</span>
@@ -370,6 +517,104 @@ export default function SpacePage() {
                     </div>
                 )}
             </div>
+
+            {/* Context Modal */}
+            <AnimatePresence>
+                {isContextModalOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setIsContextModalOpen(false)}
+                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="fixed top-[10%] left-1/2 -translate-x-1/2 w-full max-w-2xl max-h-[80vh] z-50 flex flex-col"
+                        >
+                            <div className="mx-4 rounded-2xl border border-border bg-background shadow-2xl overflow-hidden flex flex-col max-h-full">
+                                {/* Header */}
+                                <div className="flex items-center justify-between p-4 border-b border-border flex-shrink-0">
+                                    <div className="flex items-center gap-3">
+                                        <div 
+                                            className="p-2 rounded-xl"
+                                            style={{ backgroundColor: `${space.color}15` }}
+                                        >
+                                            <Sparkles className="h-5 w-5" style={{ color: space.color }} />
+                                        </div>
+                                        <div>
+                                            <h2 className="font-semibold">Contexto para Claude</h2>
+                                            <p className="text-sm text-muted-foreground">{space.name}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsContextModalOpen(false)}
+                                        className="p-2 rounded-lg hover:bg-accent"
+                                    >
+                                        <X className="h-5 w-5" />
+                                    </button>
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 overflow-y-auto p-4">
+                                    <div className="mb-4 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                                        <p className="text-sm">
+                                            Este contexto contiene información sobre <strong>{space.name}</strong> que podés copiar y pegar en Claude Code, Claude Desktop, o cualquier chat con Claude para que entienda tu proyecto.
+                                        </p>
+                                    </div>
+
+                                    <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
+                                        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-muted/50">
+                                            <span className="text-xs font-medium text-muted-foreground">contexto-{space.id}.md</span>
+                                            <button
+                                                onClick={handleGenerateContext}
+                                                disabled={isGenerating}
+                                                className="text-xs text-primary hover:underline flex items-center gap-1"
+                                            >
+                                                <RefreshCw className={cn("h-3 w-3", isGenerating && "animate-spin")} />
+                                                Regenerar
+                                            </button>
+                                        </div>
+                                        <pre className="p-4 text-sm overflow-x-auto whitespace-pre-wrap font-mono">
+                                            {generateContextText()}
+                                        </pre>
+                                    </div>
+                                </div>
+
+                                {/* Actions */}
+                                <div className="flex items-center justify-between p-4 border-t border-border bg-muted/30 flex-shrink-0">
+                                    <button
+                                        onClick={handleDownloadContext}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border hover:bg-accent transition-colors text-sm"
+                                    >
+                                        <Download className="h-4 w-4" />
+                                        Descargar .md
+                                    </button>
+                                    <button
+                                        onClick={handleCopyContext}
+                                        className="btn-primary flex items-center gap-2"
+                                    >
+                                        {copied ? (
+                                            <>
+                                                <Check className="h-4 w-4" />
+                                                ¡Copiado!
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Copy className="h-4 w-4" />
+                                                Copiar contexto
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </MainLayout>
     );
 }
