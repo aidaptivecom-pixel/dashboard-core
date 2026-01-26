@@ -13,11 +13,12 @@ import {
     Settings,
     ChevronLeft,
     ChevronRight,
-    Sparkles,
     HelpCircle,
     Search,
+    Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { WorkspaceSelector } from "@/components/workspace/WorkspaceSelector";
 
 interface NavItem {
     icon: React.ElementType;
@@ -42,12 +43,12 @@ export function Sidebar() {
     return (
         <motion.aside
             initial={false}
-            animate={{ width: collapsed ? 72 : 240 }}
+            animate={{ width: collapsed ? 72 : 260 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
             className="relative h-full bg-background flex flex-col"
         >
             {/* Logo */}
-            <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-border">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple flex-shrink-0">
                     <Sparkles className="h-4 w-4 text-white" />
                 </div>
@@ -65,12 +66,28 @@ export function Sidebar() {
                 </AnimatePresence>
             </div>
 
+            {/* Workspace Selector */}
+            {!collapsed && (
+                <div className="px-2 py-2 border-b border-border">
+                    <WorkspaceSelector />
+                </div>
+            )}
+
+            {/* Collapsed Workspace Icon */}
+            {collapsed && (
+                <div className="px-3 py-3 border-b border-border flex justify-center">
+                    <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-lg">
+                        🤖
+                    </div>
+                </div>
+            )}
+
             {/* Search */}
             {!collapsed && (
-                <div className="px-3 py-3">
+                <div className="px-3 py-2">
                     <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground rounded-lg border border-border hover:bg-accent transition-colors">
                         <Search className="h-4 w-4" />
-                        <span>Search...</span>
+                        <span>Buscar...</span>
                         <kbd className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
                     </button>
                 </div>
@@ -82,7 +99,7 @@ export function Sidebar() {
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
-                            <li key={item.label}>
+                            <li key={item.label} className="relative">
                                 <Link
                                     href={item.href}
                                     className={cn(
@@ -111,12 +128,12 @@ export function Sidebar() {
                                             {item.badge}
                                         </span>
                                     )}
-                                    {collapsed && item.badge && (
-                                        <span className="absolute left-12 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral text-white text-[10px] font-medium">
-                                            {item.badge}
-                                        </span>
-                                    )}
                                 </Link>
+                                {collapsed && item.badge && (
+                                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral text-white text-[10px] font-medium px-1">
+                                        {item.badge}
+                                    </span>
+                                )}
                             </li>
                         );
                     })}
@@ -134,7 +151,7 @@ export function Sidebar() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -10 }}
                             >
-                                Help & Support
+                                Ayuda
                             </motion.span>
                         )}
                     </AnimatePresence>
@@ -142,8 +159,8 @@ export function Sidebar() {
             </div>
 
             {/* User Avatar */}
-            <div className="px-3 py-4 border-t border-border">
-                <div className="flex items-center gap-3 px-3 py-2">
+            <div className="px-3 py-3 border-t border-border">
+                <div className="flex items-center gap-3 px-2 py-2">
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-coral to-purple flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
                         A
                     </div>
@@ -166,7 +183,7 @@ export function Sidebar() {
             {/* Collapse Toggle */}
             <button
                 onClick={() => setCollapsed(!collapsed)}
-                className="absolute -right-3 top-16 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-accent transition-colors z-10"
+                className="absolute -right-3 top-14 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-accent transition-colors z-10"
             >
                 {collapsed ? (
                     <ChevronRight className="h-3.5 w-3.5" />
