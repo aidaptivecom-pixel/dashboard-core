@@ -14,58 +14,110 @@ import {
     Zap,
     TrendingUp,
     Calendar,
+    Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTasks } from "@/hooks/useTasks";
+import { useSpaces } from "@/hooks/useSpaces";
+import { useFocusSessions } from "@/hooks/useFocusSessions";
 
-interface Task {
+interface TaskWithSpace {
     id: string;
     title: string;
     space: string;
     spaceIcon: string;
+    spaceId: string;
     completed: boolean;
     priority: "high" | "medium" | "low";
 }
 
-const mockTasks: Task[] = [
-    { id: "1", title: "Revisar propuesta cliente ABC", space: "Aidaptive", spaceIcon: "🤖", completed: false, priority: "high" },
-    { id: "2", title: "Implementar landing page", space: "Limbo", spaceIcon: "🚀", completed: false, priority: "high" },
-    { id: "3", title: "Llamar proveedor plantas", space: "iGreen", spaceIcon: "🌱", completed: false, priority: "medium" },
-    { id: "4", title: "Diseñar footer y navegación", space: "Limbo", spaceIcon: "🚀", completed: false, priority: "medium" },
-    { id: "5", title: "Responder emails pendientes", space: "Personal", spaceIcon: "👤", completed: true, priority: "low" },
-    { id: "6", title: "Crear lead magnet", space: "Aidaptive", spaceIcon: "🤖", completed: false, priority: "medium" },
-];
-
-const todayStats = {
-    focusTime: 2.5,
-    completedTasks: 3,
-    pomodoros: 6,
-    streak: 5,
-};
-
 export default function FocusPage() {
-    const [tasks, setTasks] = useState(mockTasks);
+    const { tasks, loading: tasksLoading, updateTask } = useTasks();
+    const { spaces, loading: spacesLoading } = useSpaces();
+    const { todayFocusMinutes, todayCompletedSessions, sessions } = useFocusSessions();
+    
     const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const [selectedTask, setSelectedTask] = useState<TaskWithSpace | null>(null);
 
-    const startFocus = (task?: Task) => {
+    const loading = tasksLoading || spacesLoading;
+
+    // Map tasks with space info
+    const tasksWithSpaces: TaskWithSpace[] = tasks.map(task => {
+        const space = spaces.find(s => s.id === task.space_id);
+        return {
+            id: task.id,
+            title: task.title,
+            space: space?.name || 'Sin espacio',
+            spaceIcon: space?.icon || '📋',
+            spaceId: task.space_id || '',
+            completed: task.completed || false,
+            priority: (task.priority as 'high' | 'medium' | 'low') || 'medium',
+        };
+    });
+
+    const startFocus = (task?: TaskWithSpace) => {
         setSelectedTask(task || null);
         setIsFocusModeOpen(true);
     };
 
-    const handleTaskComplete = (taskId: string) => {
-        setTasks(tasks.map(t => 
-            t.id === taskId ? { ...t, completed: true } : t
-        ));
+    const handleTaskComplete = async (taskId: string) => {
+        await updateTask(taskId, { completed: true });
     };
 
-    const toggleTask = (taskId: string) => {
-        setTasks(tasks.map(t => 
-            t.id === taskId ? { ...t, completed: !t.completed } : t
-        ));
+    const toggleTask = async (taskId: string) => {
+        const task = tasks.find(t => t.id === taskId);
+        if (task) {
+            await updateTask(taskId, { completed: !task.completed });
+        }
     };
 
-    const pendingTasks = tasks.filter(t => !t.completed);
+    const pendingTasks = tasksWithSpaces.filter(t => !t.completed);
     const highPriorityTasks = pendingTasks.filter(t => t.priority === "high");
+
+    // Calculate streak (consecutive days with completed sessions)
+    const calculateStreak = () => {
+        const today = new Date();
+        let streak = 0;
+        let currentDate = new Date(today);
+        
+        while (true) {
+            const dateStr = currentDate.toDateString();
+            const hasSession = sessions.some(s => 
+                new Date(s.started_at).toDateString() === dateStr && 
+                s.type === 'focus' && 
+                s.completed
+            );
+            
+            if (hasSession) {
+                streak++;
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else if (currentDate.toDateString() === today.toDateString()) {
+                // Today might not have sessions yet, check yesterday
+                currentDate.setDate(currentDate.getDate() - 1);
+            } else {
+                break;
+            }
+        }
+        
+        return streak;
+    };
+
+    const todayStats = {
+        focusTime: (todayFocusMinutes / 60).toFixed(1),
+        completedTasks: tasksWithSpaces.filter(t => t.completed).length,
+        pomodoros: todayCompletedSessions,
+        streak: calculateStreak(),
+    };
+
+    if (loading) {
+        return (
+            <MainLayout>
+                <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            </MainLayout>
+        );
+    }
 
     return (
         <MainLayout>
@@ -185,57 +237,65 @@ export default function FocusPage() {
                         <Calendar className="h-5 w-5" />
                         Todas las tareas
                     </h2>
-                    <div className="space-y-2">
-                        {tasks.map((task, index) => (
-                            <motion.div
-                                key={task.id}
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: 0.35 + index * 0.03 }}
-                                className={cn(
-                                    "flex items-center gap-3 p-4 rounded-2xl border border-border bg-background hover:bg-accent/50 transition-colors group",
-                                    task.completed && "opacity-60"
-                                )}
-                            >
-                                <button
-                                    onClick={() => toggleTask(task.id)}
-                                    className="flex-shrink-0"
-                                >
-                                    {task.completed ? (
-                                        <CheckCircle2 className="h-5 w-5 text-mint" />
-                                    ) : (
-                                        <Circle className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+                    {tasksWithSpaces.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                            <Target className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p>No hay tareas todavía</p>
+                            <p className="text-sm">Creá tareas desde tus objetivos o espacios</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-2">
+                            {tasksWithSpaces.map((task, index) => (
+                                <motion.div
+                                    key={task.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.35 + index * 0.03 }}
+                                    className={cn(
+                                        "flex items-center gap-3 p-4 rounded-2xl border border-border bg-background hover:bg-accent/50 transition-colors group",
+                                        task.completed && "opacity-60"
                                     )}
-                                </button>
-                                <span className="text-xl">{task.spaceIcon}</span>
-                                <div className="flex-1 min-w-0">
-                                    <p className={cn(
-                                        "font-medium truncate",
-                                        task.completed && "line-through text-muted-foreground"
-                                    )}>
-                                        {task.title}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">{task.space}</p>
-                                </div>
-                                <span className={cn(
-                                    "text-xs px-2 py-1 rounded-full",
-                                    task.priority === "high" && "bg-coral/10 text-coral",
-                                    task.priority === "medium" && "bg-yellow-500/10 text-yellow-600",
-                                    task.priority === "low" && "bg-muted text-muted-foreground"
-                                )}>
-                                    {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
-                                </span>
-                                {!task.completed && (
+                                >
                                     <button
-                                        onClick={() => startFocus(task)}
-                                        className="p-2 rounded-xl hover:bg-accent opacity-0 group-hover:opacity-100 transition-all"
+                                        onClick={() => toggleTask(task.id)}
+                                        className="flex-shrink-0"
                                     >
-                                        <Play className="h-4 w-4" />
+                                        {task.completed ? (
+                                            <CheckCircle2 className="h-5 w-5 text-mint" />
+                                        ) : (
+                                            <Circle className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
+                                        )}
                                     </button>
-                                )}
-                            </motion.div>
-                        ))}
-                    </div>
+                                    <span className="text-xl">{task.spaceIcon}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className={cn(
+                                            "font-medium truncate",
+                                            task.completed && "line-through text-muted-foreground"
+                                        )}>
+                                            {task.title}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">{task.space}</p>
+                                    </div>
+                                    <span className={cn(
+                                        "text-xs px-2 py-1 rounded-full",
+                                        task.priority === "high" && "bg-coral/10 text-coral",
+                                        task.priority === "medium" && "bg-yellow-500/10 text-yellow-600",
+                                        task.priority === "low" && "bg-muted text-muted-foreground"
+                                    )}>
+                                        {task.priority === "high" ? "Alta" : task.priority === "medium" ? "Media" : "Baja"}
+                                    </span>
+                                    {!task.completed && (
+                                        <button
+                                            onClick={() => startFocus(task)}
+                                            className="p-2 rounded-xl hover:bg-accent opacity-0 group-hover:opacity-100 transition-all"
+                                        >
+                                            <Play className="h-4 w-4" />
+                                        </button>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
                 </motion.div>
             </div>
 
@@ -244,7 +304,11 @@ export default function FocusPage() {
                 isOpen={isFocusModeOpen}
                 onClose={() => setIsFocusModeOpen(false)}
                 task={selectedTask ? {
-                    ...selectedTask,
+                    id: selectedTask.id,
+                    title: selectedTask.title,
+                    space: selectedTask.space,
+                    spaceIcon: selectedTask.spaceIcon,
+                    completed: selectedTask.completed,
                 } : undefined}
                 onTaskComplete={handleTaskComplete}
             />

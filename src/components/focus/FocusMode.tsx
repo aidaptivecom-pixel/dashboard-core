@@ -14,11 +14,10 @@ import {
     Volume2,
     VolumeX,
     SkipForward,
-    Settings,
-    Target,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import confetti from "canvas-confetti";
+import { useFocusSessions } from "@/hooks/useFocusSessions";
 
 interface FocusTask {
     id: string;
@@ -49,18 +48,21 @@ const MODE_CONFIG = {
         icon: Brain,
         color: "#4F6BFF",
         bgGradient: "from-primary/20 to-primary/5",
+        dbType: "focus" as const,
     },
     shortBreak: {
         label: "Descanso corto",
         icon: Coffee,
         color: "#4ECDC4",
         bgGradient: "from-mint/20 to-mint/5",
+        dbType: "short_break" as const,
     },
     longBreak: {
         label: "Descanso largo",
         icon: Zap,
         color: "#8B5CF6",
         bgGradient: "from-purple/20 to-purple/5",
+        dbType: "long_break" as const,
     },
 };
 
@@ -70,6 +72,9 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
     const [isRunning, setIsRunning] = useState(false);
     const [completedPomodoros, setCompletedPomodoros] = useState(0);
     const [soundEnabled, setSoundEnabled] = useState(true);
+    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+    const { startSession, endSession, todayCompletedSessions } = useFocusSessions();
 
     const currentConfig = MODE_CONFIG[mode];
     const ModeIcon = currentConfig.icon;
@@ -84,14 +89,34 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
 
     const playSound = useCallback(() => {
         if (soundEnabled && typeof window !== "undefined") {
-            const audio = new Audio("/notification.mp3");
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
+            // Create a simple beep sound
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.value = 0.3;
+            
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+                audioContext.close();
+            }, 200);
         }
     }, [soundEnabled]);
 
-    const handleTimerComplete = useCallback(() => {
+    const handleTimerComplete = useCallback(async () => {
         playSound();
+        
+        // End current session
+        if (currentSessionId) {
+            await endSession(currentSessionId, true);
+            setCurrentSessionId(null);
+        }
         
         if (mode === "focus") {
             const newCount = completedPomodoros + 1;
@@ -117,7 +142,39 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
         }
         
         setIsRunning(false);
-    }, [mode, completedPomodoros, playSound]);
+    }, [mode, completedPomodoros, playSound, currentSessionId, endSession]);
+
+    // Start session in DB when timer starts
+    const handleStartTimer = async () => {
+        if (!isRunning) {
+            const durationMinutes = Math.ceil(timeLeft / 60);
+            const { data } = await startSession({
+                type: currentConfig.dbType,
+                duration_minutes: durationMinutes,
+            });
+            if (data) {
+                setCurrentSessionId(data.id);
+            }
+        }
+        setIsRunning(true);
+    };
+
+    const handlePauseTimer = async () => {
+        setIsRunning(false);
+        // End session as incomplete if paused
+        if (currentSessionId) {
+            await endSession(currentSessionId, false);
+            setCurrentSessionId(null);
+        }
+    };
+
+    const toggleTimer = () => {
+        if (isRunning) {
+            handlePauseTimer();
+        } else {
+            handleStartTimer();
+        }
+    };
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -126,21 +183,27 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
             interval = setInterval(() => {
                 setTimeLeft(prev => prev - 1);
             }, 1000);
-        } else if (timeLeft === 0) {
+        } else if (timeLeft === 0 && isRunning) {
             handleTimerComplete();
         }
 
         return () => clearInterval(interval);
     }, [isRunning, timeLeft, handleTimerComplete]);
 
-    const toggleTimer = () => setIsRunning(!isRunning);
-
-    const resetTimer = () => {
+    const resetTimer = async () => {
         setIsRunning(false);
         setTimeLeft(TIMER_SETTINGS[mode]);
+        if (currentSessionId) {
+            await endSession(currentSessionId, false);
+            setCurrentSessionId(null);
+        }
     };
 
-    const switchMode = (newMode: TimerMode) => {
+    const switchMode = async (newMode: TimerMode) => {
+        if (currentSessionId) {
+            await endSession(currentSessionId, false);
+            setCurrentSessionId(null);
+        }
         setMode(newMode);
         setTimeLeft(TIMER_SETTINGS[newMode]);
         setIsRunning(false);
@@ -161,15 +224,49 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
         handleTimerComplete();
     };
 
+    // Keyboard shortcuts
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.code === "Space") {
+                e.preventDefault();
+                toggleTimer();
+            } else if (e.code === "KeyR") {
+                resetTimer();
+            } else if (e.code === "Escape") {
+                onClose();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [isOpen, isRunning]);
+
     // Update document title with timer
     useEffect(() => {
         if (isOpen) {
             document.title = `${formatTime(timeLeft)} - ${currentConfig.label} | FocusFlow`;
         }
         return () => {
-            document.title = "FocusFlow - Tu Sistema Operativo Personal";
+            document.title = "FocusFlow";
         };
     }, [isOpen, timeLeft, currentConfig.label]);
+
+    // Sync completed pomodoros from DB
+    useEffect(() => {
+        setCompletedPomodoros(todayCompletedSessions);
+    }, [todayCompletedSessions]);
+
+    // Cleanup on close
+    const handleClose = async () => {
+        if (currentSessionId) {
+            await endSession(currentSessionId, false);
+            setCurrentSessionId(null);
+        }
+        setIsRunning(false);
+        onClose();
+    };
 
     if (!isOpen) return null;
 
@@ -189,7 +286,7 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
 
                 {/* Close button */}
                 <button
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="absolute top-6 right-6 p-3 rounded-xl hover:bg-accent transition-colors z-10"
                 >
                     <X className="h-6 w-6" />
@@ -264,7 +361,6 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
                     {/* Timer circle */}
                     <div className="relative mb-8">
                         <svg width="280" height="280" className="-rotate-90">
-                            {/* Background circle */}
                             <circle
                                 cx="140"
                                 cy="140"
@@ -274,7 +370,6 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
                                 strokeWidth="8"
                                 className="text-muted/20"
                             />
-                            {/* Progress circle */}
                             <motion.circle
                                 cx="140"
                                 cy="140"
@@ -291,7 +386,6 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
                             />
                         </svg>
                         
-                        {/* Timer display */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center">
                             <ModeIcon 
                                 className="h-8 w-8 mb-2" 
@@ -351,7 +445,7 @@ export function FocusMode({ isOpen, onClose, task, onTaskComplete }: FocusModePr
                             />
                         ))}
                         <span className="ml-2 text-sm text-muted-foreground">
-                            {completedPomodoros} pomodoros completados
+                            {completedPomodoros} pomodoros completados hoy
                         </span>
                     </div>
 
