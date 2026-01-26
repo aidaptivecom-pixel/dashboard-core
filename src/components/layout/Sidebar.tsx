@@ -13,6 +13,7 @@ import {
     ChevronLeft,
     ChevronRight,
     Sparkles,
+    HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,14 +38,14 @@ export function Sidebar() {
     return (
         <motion.aside
             initial={false}
-            animate={{ width: collapsed ? 72 : 220 }}
+            animate={{ width: collapsed ? 72 : 240 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="relative h-full bg-background rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden"
+            className="relative h-full bg-background flex flex-col"
         >
             {/* Logo */}
-            <div className="flex items-center gap-3 px-4 py-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple flex-shrink-0">
-                    <Sparkles className="h-5 w-5 text-white" />
+            <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple flex-shrink-0">
+                    <Sparkles className="h-4 w-4 text-white" />
                 </div>
                 <AnimatePresence>
                     {!collapsed && (
@@ -60,8 +61,18 @@ export function Sidebar() {
                 </AnimatePresence>
             </div>
 
+            {/* Search - Like Neura reference */}
+            {!collapsed && (
+                <div className="px-3 py-3">
+                    <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground rounded-lg border border-border hover:bg-accent transition-colors">
+                        <span>Search...</span>
+                        <kbd className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
+                    </button>
+                </div>
+            )}
+
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-2">
+            <nav className="flex-1 px-3 py-2 overflow-y-auto">
                 <ul className="space-y-1">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
@@ -70,7 +81,7 @@ export function Sidebar() {
                                 <Link
                                     href={item.href}
                                     className={cn(
-                                        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                                         "hover:bg-accent",
                                         isActive
                                             ? "bg-primary/10 text-primary font-medium"
@@ -97,10 +108,28 @@ export function Sidebar() {
                 </ul>
             </nav>
 
+            {/* Help & Support - Like Neura */}
+            <div className="px-3 py-2 border-t border-border">
+                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                    <HelpCircle className="h-5 w-5 flex-shrink-0" />
+                    <AnimatePresence>
+                        {!collapsed && (
+                            <motion.span
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -10 }}
+                            >
+                                Help & Support
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
+                </button>
+            </div>
+
             {/* User Avatar */}
             <div className="px-3 py-4 border-t border-border">
                 <div className="flex items-center gap-3 px-3 py-2">
-                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-coral to-purple flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
+                    <div className="h-8 w-8 rounded-full bg-gradient-to-br from-coral to-purple flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
                         A
                     </div>
                     <AnimatePresence>
@@ -122,7 +151,7 @@ export function Sidebar() {
             {/* Collapse Toggle */}
             <button
                 onClick={() => setCollapsed(!collapsed)}
-                className="absolute -right-3 top-7 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-accent transition-colors z-10"
+                className="absolute -right-3 top-16 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-accent transition-colors z-10"
             >
                 {collapsed ? (
                     <ChevronRight className="h-3.5 w-3.5" />
