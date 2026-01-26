@@ -20,6 +20,8 @@ import {
     Mic,
     Image,
     Sparkles,
+    Brain,
+    BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +44,7 @@ const searchResults = [
 
 const quickActions = [
     { id: "capture", label: "Nueva captura", icon: Plus, shortcut: "C", href: "/capture" },
+    { id: "focus", label: "Iniciar focus", icon: Brain, shortcut: "F", href: "/focus" },
     { id: "task", label: "Nueva tarea", icon: Target, shortcut: "T" },
     { id: "note", label: "Nueva nota", icon: FileText, shortcut: "N" },
 ];
@@ -80,6 +83,10 @@ export function Header({ className }: HeaderProps) {
                 breadcrumbs.push({ label: "Calendario", href, icon: <Calendar className="h-4 w-4" /> });
             } else if (segment === "goals") {
                 breadcrumbs.push({ label: "Objetivos", href, icon: <Target className="h-4 w-4" /> });
+            } else if (segment === "focus") {
+                breadcrumbs.push({ label: "Focus", href, icon: <Brain className="h-4 w-4" /> });
+            } else if (segment === "stats") {
+                breadcrumbs.push({ label: "Progreso", href, icon: <BarChart3 className="h-4 w-4" /> });
             } else if (segment === "settings") {
                 breadcrumbs.push({ label: "Ajustes", href, icon: <Settings className="h-4 w-4" /> });
             } else if (segment === "spaces") {
