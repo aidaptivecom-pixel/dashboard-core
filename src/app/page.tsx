@@ -1,20 +1,42 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { WelcomeHeader } from "@/components/widgets/WelcomeHeader";
-import { FocusNowCard } from "@/components/widgets/FocusNowCard";
-import { TodaysTasks } from "@/components/widgets/TodaysTasks";
-import { EnergyCheckin } from "@/components/widgets/EnergyCheckin";
-import { FocusStats } from "@/components/widgets/FocusStats";
-import { InboxCounter } from "@/components/widgets/InboxCounter";
-import { NextEvent } from "@/components/widgets/NextEvent";
+import { DailyCheckin } from "@/components/flow/DailyCheckin";
+import { DailyBriefing } from "@/components/flow/DailyBriefing";
+import { DayPlan } from "@/components/flow/DayPlan";
 import { QuickCaptureModal } from "@/components/modals/QuickCaptureModal";
 import { FocusModeOverlay } from "@/components/modals/FocusModeOverlay";
 
+type FlowStep = "checkin" | "briefing" | "plan";
+type EnergyLevel = "low" | "medium" | "high";
+
 export default function Home() {
+    const [flowStep, setFlowStep] = useState<FlowStep>("checkin");
+    const [energy, setEnergy] = useState<EnergyLevel>("medium");
+    const [hours, setHours] = useState<number>(4);
     const [isCaptureOpen, setIsCaptureOpen] = useState(false);
     const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+
+    // Check if user already completed checkin today (localStorage)
+    useEffect(() => {
+        const today = new Date().toDateString();
+        const savedCheckin = localStorage.getItem("focusflow_checkin");
+        
+        if (savedCheckin) {
+            try {
+                const data = JSON.parse(savedCheckin);
+                if (data.date === today) {
+                    setEnergy(data.energy);
+                    setHours(data.hours);
+                    setFlowStep("plan");
+                }
+            } catch (e) {
+                // Invalid data, start fresh
+            }
+        }
+    }, []);
 
     // Handle keyboard shortcuts
     useEffect(() => {
@@ -23,7 +45,6 @@ export default function Home() {
                 e.preventDefault();
                 setIsCaptureOpen(true);
             }
-            // Escape to close focus mode
             if (e.key === "Escape" && isFocusModeOpen) {
                 setIsFocusModeOpen(false);
             }
@@ -33,38 +54,65 @@ export default function Home() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [isFocusModeOpen]);
 
+    const handleCheckinComplete = (selectedEnergy: EnergyLevel, selectedHours: number) => {
+        setEnergy(selectedEnergy);
+        setHours(selectedHours);
+        
+        // Save to localStorage
+        const today = new Date().toDateString();
+        localStorage.setItem("focusflow_checkin", JSON.stringify({
+            date: today,
+            energy: selectedEnergy,
+            hours: selectedHours
+        }));
+        
+        setFlowStep("briefing");
+    };
+
+    const handleBriefingComplete = () => {
+        setFlowStep("plan");
+    };
+
+    // Reset checkin (for testing)
+    const resetCheckin = () => {
+        localStorage.removeItem("focusflow_checkin");
+        setFlowStep("checkin");
+    };
+
     return (
         <>
             <MainLayout>
-                <div className="max-w-5xl mx-auto">
-                    {/* Welcome Header */}
-                    <WelcomeHeader
-                        onOpenCapture={() => setIsCaptureOpen(true)}
-                        onOpenSearch={() => setIsCaptureOpen(true)}
-                    />
-
-                    {/* Main Content - Simplified Layout */}
-                    <div className="space-y-4 md:space-y-6">
-                        
-                        {/* Row 1: Focus Now Card - Hero */}
-                        <FocusNowCard />
-
-                        {/* Row 2: Energy + Focus Stats */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <EnergyCheckin />
-                            <FocusStats onStartFocus={() => setIsFocusModeOpen(true)} />
+                <AnimatePresence mode="wait">
+                    {flowStep === "checkin" && (
+                        <DailyCheckin 
+                            key="checkin"
+                            onComplete={handleCheckinComplete} 
+                        />
+                    )}
+                    
+                    {flowStep === "briefing" && (
+                        <DailyBriefing 
+                            key="briefing"
+                            energy={energy}
+                            hours={hours}
+                            onContinue={handleBriefingComplete}
+                        />
+                    )}
+                    
+                    {flowStep === "plan" && (
+                        <div key="plan" className="max-w-6xl mx-auto">
+                            {/* Debug: Reset button */}
+                            <button 
+                                onClick={resetCheckin}
+                                className="fixed bottom-4 right-4 z-50 px-3 py-1.5 text-xs bg-muted hover:bg-accent rounded-lg transition-colors"
+                            >
+                                Reset Check-in
+                            </button>
+                            
+                            <DayPlan energy={energy} hours={hours} />
                         </div>
-
-                        {/* Row 3: Today's Tasks - Main List */}
-                        <TodaysTasks />
-
-                        {/* Row 4: Quick Info - Inbox + Next Event */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InboxCounter count={3} />
-                            <NextEvent />
-                        </div>
-                    </div>
-                </div>
+                    )}
+                </AnimatePresence>
             </MainLayout>
 
             {/* Modals */}
