@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Home,
@@ -18,11 +20,10 @@ interface NavItem {
     icon: React.ElementType;
     label: string;
     href: string;
-    active?: boolean;
 }
 
 const navItems: NavItem[] = [
-    { icon: Home, label: "Home", href: "/", active: true },
+    { icon: Home, label: "Home", href: "/" },
     { icon: FolderKanban, label: "Projects", href: "/projects" },
     { icon: Inbox, label: "Capture Vault", href: "/capture" },
     { icon: BarChart3, label: "Insights", href: "/insights" },
@@ -31,6 +32,7 @@ const navItems: NavItem[] = [
 
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
+    const pathname = usePathname();
 
     return (
         <motion.aside
@@ -61,34 +63,37 @@ export function Sidebar() {
             {/* Navigation */}
             <nav className="flex-1 px-3 py-4">
                 <ul className="space-y-1">
-                    {navItems.map((item) => (
-                        <li key={item.label}>
-                            <a
-                                href={item.href}
-                                className={cn(
-                                    "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
-                                    "hover:bg-accent",
-                                    item.active
-                                        ? "bg-primary/10 text-primary font-medium"
-                                        : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                <item.icon className="h-5 w-5 flex-shrink-0" />
-                                <AnimatePresence>
-                                    {!collapsed && (
-                                        <motion.span
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -10 }}
-                                            className="truncate"
-                                        >
-                                            {item.label}
-                                        </motion.span>
+                    {navItems.map((item) => {
+                        const isActive = pathname === item.href;
+                        return (
+                            <li key={item.label}>
+                                <Link
+                                    href={item.href}
+                                    className={cn(
+                                        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                                        "hover:bg-accent",
+                                        isActive
+                                            ? "bg-primary/10 text-primary font-medium"
+                                            : "text-muted-foreground hover:text-foreground"
                                     )}
-                                </AnimatePresence>
-                            </a>
-                        </li>
-                    ))}
+                                >
+                                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                                    <AnimatePresence>
+                                        {!collapsed && (
+                                            <motion.span
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                exit={{ opacity: 0, x: -10 }}
+                                                className="truncate"
+                                            >
+                                                {item.label}
+                                            </motion.span>
+                                        )}
+                                    </AnimatePresence>
+                                </Link>
+                            </li>
+                        );
+                    })}
                 </ul>
             </nav>
 
