@@ -37,13 +37,13 @@ export function Sidebar() {
     return (
         <motion.aside
             initial={false}
-            animate={{ width: collapsed ? 72 : 240 }}
+            animate={{ width: collapsed ? 72 : 220 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="sidebar flex flex-col"
+            className="relative h-full bg-background rounded-2xl border border-border shadow-sm flex flex-col overflow-hidden"
         >
             {/* Logo */}
-            <div className="flex items-center gap-3 px-4 py-6">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple">
+            <div className="flex items-center gap-3 px-4 py-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-purple flex-shrink-0">
                     <Sparkles className="h-5 w-5 text-white" />
                 </div>
                 <AnimatePresence>
@@ -61,7 +61,7 @@ export function Sidebar() {
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-4">
+            <nav className="flex-1 px-3 py-2">
                 <ul className="space-y-1">
                     {navItems.map((item) => {
                         const isActive = pathname === item.href;
@@ -122,7 +122,7 @@ export function Sidebar() {
             {/* Collapse Toggle */}
             <button
                 onClick={() => setCollapsed(!collapsed)}
-                className="absolute -right-3 top-8 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-accent transition-colors"
+                className="absolute -right-3 top-7 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-background shadow-sm hover:bg-accent transition-colors z-10"
             >
                 {collapsed ? (
                     <ChevronRight className="h-3.5 w-3.5" />
