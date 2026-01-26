@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { NoteEditor } from "@/components/editor/NoteEditor";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Folder,
@@ -28,6 +29,8 @@ import {
     X,
     Download,
     RefreshCw,
+    Edit3,
+    Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -69,10 +72,10 @@ const spacesData: Record<string, SpaceData> = {
             { id: "1", name: "Clientes", type: "folder", updatedAt: "Hace 2h" },
             { id: "2", name: "Propuestas", type: "folder", updatedAt: "Hace 1d" },
             { id: "3", name: "Proyectos Activos", type: "folder", updatedAt: "Hace 3h" },
-            { id: "4", name: "CRM - Contexto para Claude", type: "note", updatedAt: "Hace 30min", starred: true },
+            { id: "4", name: "CRM - Contexto para Claude", type: "note", updatedAt: "Hace 30min", starred: true, content: "# CRM Context\n\nEste documento contiene el contexto del CRM para usar con Claude.\n\n## Clientes activos\n\n- **Cliente ABC**: Proyecto de automatización\n- **Cliente XYZ**: Chatbot de soporte\n\n## Flujos importantes\n\n1. Lead → Contacto inicial → Propuesta\n2. Propuesta → Negociación → Cierre\n3. Proyecto → Entrega → Seguimiento" },
             { id: "5", name: "Roadmap 2026", type: "document", updatedAt: "Hace 2d" },
             { id: "6", name: "Presentación Servicios", type: "presentation", updatedAt: "Hace 1w" },
-            { id: "7", name: "Scripts Automatización", type: "code", updatedAt: "Hace 4h" },
+            { id: "7", name: "Scripts Automatización", type: "code", updatedAt: "Hace 4h", content: "// Script de automatización n8n\n\nconst workflow = {\n  name: 'Lead Automation',\n  nodes: [\n    { type: 'webhook', name: 'Trigger' },\n    { type: 'slack', name: 'Notify' }\n  ]\n};" },
             { id: "8", name: "Logo y Assets", type: "folder", updatedAt: "Hace 2w" },
         ],
         context: {
@@ -105,27 +108,18 @@ const spacesData: Record<string, SpaceData> = {
         description: "Proyecto sustentable",
         items: [
             { id: "1", name: "Proveedores", type: "folder", updatedAt: "Hace 1d" },
-            { id: "2", name: "Inventario", type: "document", updatedAt: "Hace 2h" },
+            { id: "2", name: "Inventario", type: "document", updatedAt: "Hace 2h", content: "# Inventario iGreen\n\n## Plantas disponibles\n\n| Planta | Cantidad | Precio |\n|--------|----------|--------|\n| Suculentas | 25 | $500 |\n| Pothos | 10 | $800 |\n| Monstera | 5 | $2500 |\n\n## Por reponer\n\n- Macetas medianas\n- Tierra especial suculentas" },
             { id: "3", name: "Fotos Productos", type: "folder", updatedAt: "Hace 3d" },
             { id: "4", name: "Precios y Costos", type: "document", updatedAt: "Hace 1w" },
         ],
         context: {
-            summary: "iGreen es mi emprendimiento de venta de plantas y productos sustentables. Vendo principalmente plantas de interior, macetas ecológicas y kits de jardinería.",
+            summary: "iGreen es mi emprendimiento de venta de plantas y productos sustentables.",
             keyInfo: [
                 "Venta por Instagram y WhatsApp",
                 "Zona de entrega: CABA y GBA Norte",
-                "Proveedores principales en zona sur",
-                "Margen objetivo: 40-50%",
             ],
-            activeProjects: [
-                "Organizar inventario actual",
-                "Fotografiar todos los productos",
-                "Definir precios actualizados",
-            ],
-            recentActivity: [
-                "Nuevo lote de suculentas (hace 2h)",
-                "3 ventas esta semana",
-            ],
+            activeProjects: [],
+            recentActivity: ["Nuevo lote de suculentas (hace 2h)"],
         },
     },
     limbo: {
@@ -137,27 +131,15 @@ const spacesData: Record<string, SpaceData> = {
         description: "Landing page en construcción",
         items: [
             { id: "1", name: "Diseño UI", type: "folder", updatedAt: "Hace 1h" },
-            { id: "2", name: "Copy y Textos", type: "note", updatedAt: "Hace 4h" },
+            { id: "2", name: "Copy y Textos", type: "note", updatedAt: "Hace 4h", content: "# Copy Limbo Landing\n\n## Hero\n\n**Headline**: Automatiza tu negocio con IA\n\n**Subheadline**: Dejá que la inteligencia artificial trabaje por vos mientras dormís.\n\n## Features\n\n1. **Automatización 24/7**: Nunca más pierdas un lead\n2. **IA Personalizada**: Respuestas que suenan a vos\n3. **Integración Simple**: Conecta con tus apps favoritas" },
             { id: "3", name: "Wireframes", type: "image", updatedAt: "Hace 2d" },
             { id: "4", name: "Componentes React", type: "code", updatedAt: "Hace 1d" },
         ],
         context: {
-            summary: "Limbo es un proyecto de landing page/producto que estoy desarrollando. El objetivo es crear una plataforma o servicio (aún en definición) con una landing page atractiva para captar usuarios en waitlist.",
-            keyInfo: [
-                "Stack: Next.js, Tailwind, Framer Motion",
-                "Objetivo: Landing + Waitlist funcional",
-                "Estilo visual: Moderno, minimalista, gradientes",
-                "Hosting: Vercel",
-            ],
-            activeProjects: [
-                "Diseño del hero section",
-                "Implementación de componentes",
-                "Sistema de waitlist con Supabase",
-            ],
-            recentActivity: [
-                "Diseño de features section (hace 1h)",
-                "Setup del proyecto Next.js (hace 1d)",
-            ],
+            summary: "Limbo es un proyecto de landing page/producto en desarrollo.",
+            keyInfo: ["Stack: Next.js, Tailwind, Framer Motion"],
+            activeProjects: ["Landing page", "Waitlist system"],
+            recentActivity: [],
         },
     },
     personal: {
@@ -170,19 +152,13 @@ const spacesData: Record<string, SpaceData> = {
         items: [
             { id: "1", name: "Ideas", type: "folder", updatedAt: "Hace 2h" },
             { id: "2", name: "Lecturas", type: "folder", updatedAt: "Hace 1w" },
-            { id: "3", name: "Reflexiones", type: "note", updatedAt: "Hace 3d" },
+            { id: "3", name: "Reflexiones", type: "note", updatedAt: "Hace 3d", content: "# Reflexiones\n\n## Sobre productividad\n\nNo se trata de hacer más, sino de hacer lo correcto.\n\n## Sobre proyectos\n\n> \"Un proyecto terminado es mejor que diez a medias.\"\n\n## Ideas para explorar\n\n- [ ] Meditación matutina\n- [ ] Journaling diario\n- [x] Sistema de captura implementado" },
         ],
         context: {
-            summary: "Espacio personal para ideas, reflexiones y contenido que no pertenece a ningún proyecto específico.",
-            keyInfo: [
-                "Ideas de nuevos proyectos",
-                "Notas de libros y artículos",
-                "Reflexiones personales",
-            ],
+            summary: "Espacio personal para ideas y reflexiones.",
+            keyInfo: [],
             activeProjects: [],
-            recentActivity: [
-                "Nueva idea capturada (hace 2h)",
-            ],
+            recentActivity: [],
         },
     },
 };
@@ -214,7 +190,7 @@ const getFileColor = (type: string) => {
 export default function SpacePage() {
     const params = useParams();
     const spaceId = params.id as string;
-    const space = spacesData[spaceId];
+    const [space, setSpace] = useState(spacesData[spaceId]);
 
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
@@ -222,6 +198,11 @@ export default function SpacePage() {
     const [isContextModalOpen, setIsContextModalOpen] = useState(false);
     const [copied, setCopied] = useState(false);
     const [isGenerating, setIsGenerating] = useState(false);
+    
+    // Editor state
+    const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<SpaceItem | null>(null);
+    const [isNewNote, setIsNewNote] = useState(false);
 
     if (!space) {
         return (
@@ -298,10 +279,60 @@ Este contexto fue generado por FocusFlow para usar con Claude.
 
     const handleGenerateContext = () => {
         setIsGenerating(true);
-        // Simular generación con IA
-        setTimeout(() => {
-            setIsGenerating(false);
-        }, 1500);
+        setTimeout(() => setIsGenerating(false), 1500);
+    };
+
+    const handleOpenNote = (item: SpaceItem) => {
+        if (item.type === "note" || item.type === "document" || item.type === "code") {
+            setEditingItem(item);
+            setIsNewNote(false);
+            setIsEditorOpen(true);
+        }
+    };
+
+    const handleNewNote = () => {
+        setEditingItem(null);
+        setIsNewNote(true);
+        setIsEditorOpen(true);
+    };
+
+    const handleSaveNote = (note: { title: string; content: string }) => {
+        if (isNewNote) {
+            // Add new note
+            const newItem: SpaceItem = {
+                id: Date.now().toString(),
+                name: note.title,
+                type: "note",
+                updatedAt: "Ahora",
+                content: note.content,
+            };
+            setSpace({
+                ...space,
+                items: [newItem, ...space.items],
+            });
+        } else if (editingItem) {
+            // Update existing note
+            setSpace({
+                ...space,
+                items: space.items.map(item => 
+                    item.id === editingItem.id 
+                        ? { ...item, name: note.title, content: note.content, updatedAt: "Ahora" }
+                        : item
+                ),
+            });
+        }
+        setIsEditorOpen(false);
+        setEditingItem(null);
+    };
+
+    const handleToggleStar = (itemId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        setSpace({
+            ...space,
+            items: space.items.map(item =>
+                item.id === itemId ? { ...item, starred: !item.starred } : item
+            ),
+        });
     };
 
     return (
@@ -333,7 +364,10 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <button className="btn-primary flex items-center gap-2">
+                        <button 
+                            onClick={handleNewNote}
+                            className="btn-primary flex items-center gap-2"
+                        >
                             <Plus className="h-4 w-4" />
                             Nuevo
                         </button>
@@ -396,7 +430,10 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                         <FolderPlus className="h-4 w-4" />
                         Nueva carpeta
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-border hover:bg-accent transition-colors text-sm whitespace-nowrap">
+                    <button 
+                        onClick={handleNewNote}
+                        className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-border hover:bg-accent hover:border-green-500/30 transition-colors text-sm whitespace-nowrap"
+                    >
                         <StickyNote className="h-4 w-4" />
                         Nueva nota
                     </button>
@@ -445,6 +482,7 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                                     {files.map((item) => {
                                         const Icon = getFileIcon(item.type);
                                         const colorClass = getFileColor(item.type);
+                                        const isEditable = item.type === "note" || item.type === "document" || item.type === "code";
                                         
                                         return (
                                             <motion.button
@@ -453,16 +491,30 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
+                                                onClick={() => isEditable && handleOpenNote(item)}
                                                 className="group p-4 rounded-2xl border border-border bg-background hover:bg-accent hover:border-primary/20 transition-all text-left relative"
                                             >
-                                                {item.starred && (
-                                                    <Star className="absolute top-2 right-2 h-4 w-4 text-yellow-500 fill-yellow-500" />
-                                                )}
+                                                <button
+                                                    onClick={(e) => handleToggleStar(item.id, e)}
+                                                    className={cn(
+                                                        "absolute top-2 right-2 p-1 rounded-lg transition-all",
+                                                        item.starred 
+                                                            ? "text-yellow-500" 
+                                                            : "text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-yellow-500"
+                                                    )}
+                                                >
+                                                    <Star className={cn("h-4 w-4", item.starred && "fill-yellow-500")} />
+                                                </button>
                                                 <div className={cn("p-3 rounded-xl w-fit mb-3", colorClass)}>
                                                     <Icon className="h-6 w-6" />
                                                 </div>
                                                 <p className="font-medium truncate">{item.name}</p>
-                                                <p className="text-xs text-muted-foreground">{item.updatedAt}</p>
+                                                <div className="flex items-center justify-between mt-1">
+                                                    <p className="text-xs text-muted-foreground">{item.updatedAt}</p>
+                                                    {isEditable && (
+                                                        <Edit3 className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    )}
+                                                </div>
                                             </motion.button>
                                         );
                                     })}
@@ -480,6 +532,7 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                         {filteredItems.map((item, index) => {
                             const Icon = getFileIcon(item.type);
                             const colorClass = getFileColor(item.type);
+                            const isEditable = item.type === "note" || item.type === "document" || item.type === "code";
                             
                             return (
                                 <motion.button
@@ -487,6 +540,7 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ delay: index * 0.02 }}
+                                    onClick={() => isEditable && handleOpenNote(item)}
                                     className="w-full grid grid-cols-[1fr,auto,auto] gap-4 px-4 py-3 hover:bg-accent transition-colors text-left items-center border-t border-border"
                                 >
                                     <div className="flex items-center gap-3 min-w-0">
@@ -497,9 +551,15 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                                         {item.starred && (
                                             <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
                                         )}
+                                        {isEditable && (
+                                            <Edit3 className="h-3 w-3 text-muted-foreground" />
+                                        )}
                                     </div>
                                     <span className="text-sm text-muted-foreground w-24">{item.updatedAt}</span>
-                                    <button className="p-1 rounded hover:bg-muted w-8">
+                                    <button 
+                                        className="p-1 rounded hover:bg-muted w-8"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
                                         <MoreHorizontal className="h-4 w-4" />
                                     </button>
                                 </motion.button>
@@ -517,6 +577,19 @@ Este contexto fue generado por FocusFlow para usar con Claude.
                     </div>
                 )}
             </div>
+
+            {/* Note Editor */}
+            <NoteEditor
+                isOpen={isEditorOpen}
+                onClose={() => {
+                    setIsEditorOpen(false);
+                    setEditingItem(null);
+                }}
+                onSave={handleSaveNote}
+                initialTitle={editingItem?.name || ""}
+                initialContent={editingItem?.content || ""}
+                spaceColor={space.color}
+            />
 
             {/* Context Modal */}
             <AnimatePresence>
