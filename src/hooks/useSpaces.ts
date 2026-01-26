@@ -23,6 +23,14 @@ export function useSpaces() {
 
   const fetchSpaces = useCallback(async () => {
     const supabase = createClient();
+    
+    // First check if user is authenticated
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
     const { data, error } = await supabase
       .from('spaces')
@@ -30,6 +38,7 @@ export function useSpaces() {
       .order('sort_order', { ascending: true });
 
     if (error) {
+      console.error('Error fetching spaces:', error);
       setError(error.message);
     } else {
       setSpaces((data as Space[]) || []);
@@ -56,8 +65,14 @@ export function useSpaces() {
   const createSpace = async (space: { name: string; icon?: string; color?: string; description?: string }) => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Not authenticated' };
+    
+    if (!user) {
+      console.error('Cannot create space: user not authenticated');
+      return { error: 'Not authenticated' };
+    }
 
+    console.log('Creating space for user:', user.id);
+    
     const { data, error } = await supabase
       .from('spaces')
       .insert({
@@ -70,7 +85,10 @@ export function useSpaces() {
       .select()
       .single();
 
-    if (!error && data) {
+    if (error) {
+      console.error('Error creating space:', error);
+    } else if (data) {
+      console.log('Space created:', data);
       setSpaces(prev => [...prev, data as Space]);
     }
     return { data, error };
