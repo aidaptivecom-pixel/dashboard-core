@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
@@ -12,17 +12,20 @@
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96%;
     --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
+    --muted: 220 14% 96%;
     --muted-foreground: 215 16% 47%;
     --accent: 210 40% 96%;
     --accent-foreground: 222 47% 11%;
-    --border: 214 32% 91%;
+    --border: 220 13% 91%;
     --ring: 233 100% 65%;
     --radius: 1rem;
+    
+    /* App background - subtle gray */
+    --app-bg: 220 14% 94%;
   }
 
   .dark {
-    --background: 0 0% 6%;
+    --background: 0 0% 9%;
     --foreground: 210 40% 98%;
     --card: 0 0% 9%;
     --card-foreground: 210 40% 98%;
@@ -34,8 +37,11 @@
     --muted-foreground: 215 20% 65%;
     --accent: 0 0% 15%;
     --accent-foreground: 210 40% 98%;
-    --border: 0 0% 20%;
+    --border: 0 0% 18%;
     --ring: 233 100% 65%;
+    
+    /* App background - deep dark */
+    --app-bg: 0 0% 4%;
   }
 }
 
@@ -44,7 +50,8 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
+    background-color: hsl(var(--app-bg));
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
@@ -52,48 +59,41 @@
 @layer components {
   /* Glassmorphism card variants */
   .glass-card {
-    @apply relative overflow-hidden rounded-2xl border border-white/20 bg-white/70 backdrop-blur-xl;
+    @apply relative overflow-hidden rounded-2xl border border-border/50 bg-white/80 backdrop-blur-sm;
     @apply dark:bg-white/5 dark:border-white/10;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
   }
 
   .glass-card-blue {
     @apply glass-card;
-    background: linear-gradient(135deg, rgba(79, 107, 255, 0.15) 0%, rgba(255, 255, 255, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(79, 107, 255, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
   }
   .dark .glass-card-blue {
-    background: linear-gradient(135deg, rgba(79, 107, 255, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(79, 107, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
   }
 
   .glass-card-coral {
     @apply glass-card;
-    background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 255, 255, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
   }
   .dark .glass-card-coral {
-    background: linear-gradient(135deg, rgba(255, 107, 107, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
   }
 
   .glass-card-mint {
     @apply glass-card;
-    background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(255, 255, 255, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
   }
   .dark .glass-card-mint {
-    background: linear-gradient(135deg, rgba(78, 205, 196, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
   }
 
   .glass-card-purple {
     @apply glass-card;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(255, 255, 255, 0.7) 100%);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
   }
   .dark .glass-card-purple {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(255, 255, 255, 0.05) 100%);
-  }
-
-  /* Sidebar styling */
-  .sidebar {
-    @apply fixed left-0 top-0 h-screen z-50;
-    @apply bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl;
-    @apply border-r border-border;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
   }
 
   /* Button variants */
