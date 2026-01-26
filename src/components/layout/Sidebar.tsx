@@ -6,19 +6,22 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Home,
-    FolderKanban,
+    Folder,
     Inbox,
-    Image,
-    BarChart3,
+    Calendar,
+    Target,
     Settings,
     ChevronLeft,
     ChevronRight,
-    HelpCircle,
     Search,
     Sparkles,
+    Building2,
+    Rocket,
+    User,
+    ChevronDown,
+    Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { WorkspaceSelector } from "@/components/workspace/WorkspaceSelector";
 
 interface NavItem {
     icon: React.ElementType;
@@ -27,18 +30,39 @@ interface NavItem {
     badge?: number;
 }
 
+interface Space {
+    id: string;
+    name: string;
+    icon: string;
+    type: "business" | "project" | "personal";
+    color: string;
+}
+
 const navItems: NavItem[] = [
-    { icon: Home, label: "Home", href: "/" },
-    { icon: Inbox, label: "Inbox", href: "/inbox", badge: 5 },
-    { icon: FolderKanban, label: "Projects", href: "/projects" },
-    { icon: Image, label: "Capture", href: "/capture" },
-    { icon: BarChart3, label: "Insights", href: "/insights" },
-    { icon: Settings, label: "Settings", href: "/settings" },
+    { icon: Home, label: "Inicio", href: "/" },
+    { icon: Inbox, label: "Captura", href: "/capture", badge: 3 },
+    { icon: Calendar, label: "Calendario", href: "/calendar" },
+    { icon: Target, label: "Objetivos", href: "/goals" },
+    { icon: Settings, label: "Ajustes", href: "/settings" },
+];
+
+const spaces: Space[] = [
+    { id: "aidaptive", name: "Aidaptive", icon: "🤖", type: "business", color: "#4F6BFF" },
+    { id: "igreen", name: "iGreen", icon: "🌱", type: "business", color: "#10B981" },
+    { id: "limbo", name: "Limbo", icon: "🚀", type: "project", color: "#8B5CF6" },
+    { id: "personal", name: "Personal", icon: "👤", type: "personal", color: "#F59E0B" },
 ];
 
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
+    const [spacesOpen, setSpacesOpen] = useState(true);
     const pathname = usePathname();
+
+    const getTypeIcon = (type: string) => {
+        if (type === "business") return Building2;
+        if (type === "project") return Rocket;
+        return User;
+    };
 
     return (
         <motion.aside
@@ -66,26 +90,10 @@ export function Sidebar() {
                 </AnimatePresence>
             </div>
 
-            {/* Workspace Selector */}
-            {!collapsed && (
-                <div className="px-2 py-2 border-b border-border">
-                    <WorkspaceSelector />
-                </div>
-            )}
-
-            {/* Collapsed Workspace Icon */}
-            {collapsed && (
-                <div className="px-3 py-3 border-b border-border flex justify-center">
-                    <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-lg">
-                        🤖
-                    </div>
-                </div>
-            )}
-
             {/* Search */}
             {!collapsed && (
-                <div className="px-3 py-2">
-                    <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground rounded-lg border border-border hover:bg-accent transition-colors">
+                <div className="px-3 py-3">
+                    <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground rounded-xl border border-border hover:bg-accent transition-colors">
                         <Search className="h-4 w-4" />
                         <span>Buscar...</span>
                         <kbd className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">⌘K</kbd>
@@ -93,17 +101,17 @@ export function Sidebar() {
                 </div>
             )}
 
-            {/* Navigation */}
-            <nav className="flex-1 px-3 py-2 overflow-y-auto">
+            {/* Main Navigation */}
+            <nav className="px-3 py-2">
                 <ul className="space-y-1">
-                    {navItems.map((item) => {
+                    {navItems.slice(0, 2).map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <li key={item.label} className="relative">
                                 <Link
                                     href={item.href}
                                     className={cn(
-                                        "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
+                                        "flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all",
                                         "hover:bg-accent",
                                         isActive
                                             ? "bg-primary/10 text-primary font-medium"
@@ -114,66 +122,160 @@ export function Sidebar() {
                                     <AnimatePresence>
                                         {!collapsed && (
                                             <motion.span
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: -10 }}
-                                                className="flex-1 truncate"
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="flex-1"
                                             >
                                                 {item.label}
                                             </motion.span>
                                         )}
                                     </AnimatePresence>
                                     {!collapsed && item.badge && (
-                                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-coral text-white text-xs font-medium px-1.5">
+                                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary text-white text-xs font-medium px-1.5">
                                             {item.badge}
                                         </span>
                                     )}
                                 </Link>
-                                {collapsed && item.badge && (
-                                    <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-coral text-white text-[10px] font-medium px-1">
-                                        {item.badge}
-                                    </span>
-                                )}
                             </li>
                         );
                     })}
                 </ul>
             </nav>
 
-            {/* Help & Support */}
-            <div className="px-3 py-2 border-t border-border">
-                <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                    <HelpCircle className="h-5 w-5 flex-shrink-0" />
+            {/* Spaces Section */}
+            {!collapsed && (
+                <div className="flex-1 px-3 py-2 overflow-y-auto">
+                    <button
+                        onClick={() => setSpacesOpen(!spacesOpen)}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+                    >
+                        <Folder className="h-4 w-4" />
+                        <span>Espacios</span>
+                        <ChevronDown className={cn(
+                            "h-3 w-3 ml-auto transition-transform",
+                            !spacesOpen && "-rotate-90"
+                        )} />
+                    </button>
+
                     <AnimatePresence>
-                        {!collapsed && (
-                            <motion.span
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -10 }}
+                        {spacesOpen && (
+                            <motion.ul
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="space-y-1 mt-1"
                             >
-                                Ayuda
-                            </motion.span>
+                                {spaces.map((space) => {
+                                    const isActive = pathname === `/spaces/${space.id}`;
+                                    const TypeIcon = getTypeIcon(space.type);
+                                    
+                                    return (
+                                        <li key={space.id}>
+                                            <Link
+                                                href={`/spaces/${space.id}`}
+                                                className={cn(
+                                                    "flex items-center gap-3 px-3 py-2 rounded-xl transition-all",
+                                                    "hover:bg-accent",
+                                                    isActive
+                                                        ? "bg-accent"
+                                                        : "text-muted-foreground hover:text-foreground"
+                                                )}
+                                            >
+                                                <span className="text-lg">{space.icon}</span>
+                                                <span className="flex-1 truncate text-sm">{space.name}</span>
+                                                <TypeIcon className="h-3 w-3 opacity-50" />
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                                
+                                {/* Add Space Button */}
+                                <li>
+                                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-all">
+                                        <Plus className="h-4 w-4" />
+                                        <span className="text-sm">Nuevo espacio</span>
+                                    </button>
+                                </li>
+                            </motion.ul>
                         )}
                     </AnimatePresence>
-                </button>
+                </div>
+            )}
+
+            {/* Collapsed Spaces */}
+            {collapsed && (
+                <div className="flex-1 px-3 py-2 overflow-y-auto">
+                    <div className="space-y-2">
+                        {spaces.map((space) => (
+                            <Link
+                                key={space.id}
+                                href={`/spaces/${space.id}`}
+                                className={cn(
+                                    "flex h-10 w-10 items-center justify-center rounded-xl transition-all mx-auto",
+                                    "hover:bg-accent",
+                                    pathname === `/spaces/${space.id}` && "bg-accent"
+                                )}
+                                title={space.name}
+                            >
+                                <span className="text-lg">{space.icon}</span>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Bottom Navigation */}
+            <div className="px-3 py-2 border-t border-border">
+                <ul className="space-y-1">
+                    {navItems.slice(2).map((item) => {
+                        const isActive = pathname === item.href;
+                        return (
+                            <li key={item.label}>
+                                <Link
+                                    href={item.href}
+                                    className={cn(
+                                        "flex items-center gap-3 px-3 py-2 rounded-xl transition-all",
+                                        "hover:bg-accent",
+                                        isActive
+                                            ? "bg-primary/10 text-primary font-medium"
+                                            : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                >
+                                    <item.icon className="h-5 w-5 flex-shrink-0" />
+                                    <AnimatePresence>
+                                        {!collapsed && (
+                                            <motion.span
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                            >
+                                                {item.label}
+                                            </motion.span>
+                                        )}
+                                    </AnimatePresence>
+                                </Link>
+                            </li>
+                        );
+                    })}
+                </ul>
             </div>
 
-            {/* User Avatar */}
+            {/* User */}
             <div className="px-3 py-3 border-t border-border">
-                <div className="flex items-center gap-3 px-2 py-2">
+                <div className="flex items-center gap-3 px-2">
                     <div className="h-8 w-8 rounded-full bg-gradient-to-br from-coral to-purple flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
                         A
                     </div>
                     <AnimatePresence>
                         {!collapsed && (
                             <motion.div
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -10 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
                                 className="flex-1 min-w-0"
                             >
                                 <p className="text-sm font-medium truncate">Alex</p>
-                                <p className="text-xs text-muted-foreground truncate">alex@example.com</p>
                             </motion.div>
                         )}
                     </AnimatePresence>
