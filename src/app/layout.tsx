@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/ThemeProvider";
-import { WorkspaceProvider } from "@/context/WorkspaceContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-    title: "FocusFlow - ADHD Productivity Dashboard",
-    description: "A productivity dashboard designed for minds that think differently. Stay focused, capture ideas, and achieve your goals.",
-    keywords: ["ADHD", "productivity", "focus", "task management", "time tracking"],
+    title: "FocusFlow - Tu Sistema Operativo Personal",
+    description: "Organiza tu trabajo, captura ideas y alcanza tus objetivos. Un sistema personal para mentes que piensan diferente.",
+    keywords: ["productividad", "organización", "tareas", "captura", "objetivos"],
     authors: [{ name: "FocusFlow" }],
     viewport: "width=device-width, initial-scale=1, maximum-scale=1",
     themeColor: [
@@ -32,9 +31,7 @@ export default function RootLayout({
         <html lang="es" suppressHydrationWarning>
             <body className={inter.className}>
                 <ThemeProvider>
-                    <WorkspaceProvider>
-                        {children}
-                    </WorkspaceProvider>
+                    {children}
                 </ThemeProvider>
             </body>
         </html>
