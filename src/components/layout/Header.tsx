@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { useTheme } from "next-themes";
 import {
     Search,
     Command,
@@ -22,6 +23,9 @@ import {
     Sparkles,
     Brain,
     BarChart3,
+    Sun,
+    Moon,
+    Monitor,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -55,12 +59,19 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
     const pathname = usePathname();
+    const { theme, setTheme, resolvedTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const [isQuickCaptureOpen, setIsQuickCaptureOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const [quickCaptureText, setQuickCaptureText] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const captureInputRef = useRef<HTMLInputElement>(null);
+
+    // Avoid hydration mismatch
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Generate breadcrumbs from pathname
     const getBreadcrumbs = () => {
@@ -106,6 +117,30 @@ export function Header({ className }: HeaderProps) {
 
     const breadcrumbs = getBreadcrumbs();
 
+    // Cycle through themes
+    const cycleTheme = () => {
+        if (theme === "light") {
+            setTheme("dark");
+        } else if (theme === "dark") {
+            setTheme("system");
+        } else {
+            setTheme("light");
+        }
+    };
+
+    // Get current theme icon
+    const getThemeIcon = () => {
+        if (!mounted) return <Sun className="h-4 w-4" />;
+        
+        if (theme === "system") {
+            return <Monitor className="h-4 w-4" />;
+        }
+        if (resolvedTheme === "dark") {
+            return <Moon className="h-4 w-4" />;
+        }
+        return <Sun className="h-4 w-4" />;
+    };
+
     // Keyboard shortcuts
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -113,6 +148,11 @@ export function Header({ className }: HeaderProps) {
             if ((e.metaKey || e.ctrlKey) && e.key === "k") {
                 e.preventDefault();
                 setIsSearchOpen(true);
+            }
+            // Cmd/Ctrl + D for dark mode toggle
+            if ((e.metaKey || e.ctrlKey) && e.key === "d") {
+                e.preventDefault();
+                cycleTheme();
             }
             // Escape to close
             if (e.key === "Escape") {
@@ -123,7 +163,7 @@ export function Header({ className }: HeaderProps) {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
+    }, [theme]);
 
     // Focus search input when opened
     useEffect(() => {
@@ -160,7 +200,7 @@ export function Header({ className }: HeaderProps) {
                 {/* Breadcrumbs */}
                 <nav className="flex items-center gap-1 text-sm">
                     {breadcrumbs.map((crumb, index) => (
-                        <div key={crumb.href} className="flex items-center gap-1">
+                        <div key={crumb.href + index} className="flex items-center gap-1">
                             {index > 0 && (
                                 <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             )}
@@ -182,6 +222,22 @@ export function Header({ className }: HeaderProps) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-2">
+                    {/* Theme toggle */}
+                    <button
+                        onClick={cycleTheme}
+                        className="p-2 rounded-xl border border-border hover:bg-accent transition-colors"
+                        title={`Tema: ${theme === "system" ? "Sistema" : theme === "dark" ? "Oscuro" : "Claro"} (⌘D)`}
+                    >
+                        <motion.div
+                            key={theme}
+                            initial={{ rotate: -90, opacity: 0 }}
+                            animate={{ rotate: 0, opacity: 1 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            {getThemeIcon()}
+                        </motion.div>
+                    </button>
+
                     {/* Search button */}
                     <button
                         onClick={() => setIsSearchOpen(true)}
