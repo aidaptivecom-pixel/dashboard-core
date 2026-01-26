@@ -12,12 +12,11 @@ import {
     Phone,
     Video,
     AlertCircle,
-    CheckCircle2,
     Circle,
     MoreHorizontal,
-    Filter,
     List,
     Grid3X3,
+    CalendarDays,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -147,6 +146,27 @@ const generateMockEvents = (): CalendarEvent[] => {
             spaceIcon: "🌱",
             color: "#10B981",
         },
+        {
+            id: "11",
+            title: "Planificación semanal",
+            date: new Date(today.getTime() - 24 * 60 * 60 * 1000),
+            time: "09:00",
+            endTime: "09:30",
+            type: "meeting",
+            space: "personal",
+            spaceIcon: "👤",
+            color: "#F59E0B",
+        },
+        {
+            id: "12",
+            title: "Deploy nuevo feature",
+            date: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000),
+            time: "15:00",
+            type: "task",
+            space: "aidaptive",
+            spaceIcon: "🤖",
+            color: "#4F6BFF",
+        },
     ];
     return events;
 };
@@ -160,7 +180,9 @@ const typeConfig = {
 };
 
 const DAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+const DAYS_FULL = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 7am to 8pm
 
 export default function CalendarPage() {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -183,16 +205,29 @@ export default function CalendarPage() {
         
         const days: (Date | null)[] = [];
         
-        // Add empty slots for days before the first of the month
         for (let i = 0; i < startingDay; i++) {
             days.push(null);
         }
         
-        // Add all days of the month
         for (let i = 1; i <= daysInMonth; i++) {
             days.push(new Date(year, month, i));
         }
         
+        return days;
+    };
+
+    const getWeekDays = (date: Date) => {
+        const day = date.getDay();
+        const diff = date.getDate() - day;
+        const weekStart = new Date(date);
+        weekStart.setDate(diff);
+        
+        const days: Date[] = [];
+        for (let i = 0; i < 7; i++) {
+            const d = new Date(weekStart);
+            d.setDate(weekStart.getDate() + i);
+            days.push(d);
+        }
         return days;
     };
 
@@ -212,6 +247,12 @@ export default function CalendarPage() {
 
     const navigateMonth = (direction: number) => {
         setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1));
+    };
+
+    const navigateWeek = (direction: number) => {
+        const newDate = new Date(currentDate);
+        newDate.setDate(currentDate.getDate() + direction * 7);
+        setCurrentDate(newDate);
     };
 
     const goToToday = () => {
@@ -234,8 +275,8 @@ export default function CalendarPage() {
 
     const selectedDateEvents = getEventsForDate(selectedDate);
     const days = getDaysInMonth(currentDate);
+    const weekDays = getWeekDays(currentDate);
 
-    // Get upcoming events for agenda view
     const getUpcomingEvents = () => {
         const now = new Date();
         now.setHours(0, 0, 0, 0);
@@ -260,6 +301,29 @@ export default function CalendarPage() {
         if (d.toDateString() === tomorrow.toDateString()) return "Mañana";
         
         return d.toLocaleDateString("es", { weekday: "short", day: "numeric", month: "short" });
+    };
+
+    const getWeekRange = () => {
+        const start = weekDays[0];
+        const end = weekDays[6];
+        if (start.getMonth() === end.getMonth()) {
+            return `${start.getDate()} - ${end.getDate()} ${MONTHS[start.getMonth()]} ${start.getFullYear()}`;
+        }
+        return `${start.getDate()} ${MONTHS[start.getMonth()].slice(0, 3)} - ${end.getDate()} ${MONTHS[end.getMonth()].slice(0, 3)} ${end.getFullYear()}`;
+    };
+
+    const getEventPosition = (time: string) => {
+        const [hours, minutes] = time.split(":").map(Number);
+        const startHour = 7;
+        return ((hours - startHour) * 60 + minutes) * (60 / 60); // px per minute
+    };
+
+    const getEventHeight = (startTime: string, endTime?: string) => {
+        if (!endTime) return 30;
+        const [startH, startM] = startTime.split(":").map(Number);
+        const [endH, endM] = endTime.split(":").map(Number);
+        const duration = (endH * 60 + endM) - (startH * 60 + startM);
+        return Math.max(duration, 30);
     };
 
     return (
@@ -287,19 +351,19 @@ export default function CalendarPage() {
 
                 {/* Toolbar */}
                 <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                    {/* Month Navigation */}
+                    {/* Navigation */}
                     <div className="flex items-center gap-2">
                         <button 
-                            onClick={() => navigateMonth(-1)}
+                            onClick={() => viewMode === "week" ? navigateWeek(-1) : navigateMonth(-1)}
                             className="p-2 rounded-xl hover:bg-accent transition-colors"
                         >
                             <ChevronLeft className="h-5 w-5" />
                         </button>
-                        <h2 className="text-lg font-semibold min-w-[180px] text-center">
-                            {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
+                        <h2 className="text-lg font-semibold min-w-[220px] text-center">
+                            {viewMode === "week" ? getWeekRange() : `${MONTHS[currentDate.getMonth()]} ${currentDate.getFullYear()}`}
                         </h2>
                         <button 
-                            onClick={() => navigateMonth(1)}
+                            onClick={() => viewMode === "week" ? navigateWeek(1) : navigateMonth(1)}
                             className="p-2 rounded-xl hover:bg-accent transition-colors"
                         >
                             <ChevronRight className="h-5 w-5" />
@@ -352,6 +416,16 @@ export default function CalendarPage() {
                                 <Grid3X3 className="h-4 w-4" />
                             </button>
                             <button
+                                onClick={() => setViewMode("week")}
+                                className={cn(
+                                    "p-2 transition-colors",
+                                    viewMode === "week" ? "bg-accent" : "hover:bg-accent"
+                                )}
+                                title="Vista semanal"
+                            >
+                                <CalendarDays className="h-4 w-4" />
+                            </button>
+                            <button
                                 onClick={() => setViewMode("agenda")}
                                 className={cn(
                                     "p-2 transition-colors",
@@ -365,12 +439,11 @@ export default function CalendarPage() {
                     </div>
                 </div>
 
-                {viewMode === "month" ? (
+                {/* Month View */}
+                {viewMode === "month" && (
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Calendar Grid */}
                         <div className="lg:col-span-2">
                             <div className="rounded-2xl border border-border bg-background overflow-hidden">
-                                {/* Days header */}
                                 <div className="grid grid-cols-7 border-b border-border">
                                     {DAYS.map(day => (
                                         <div key={day} className="p-3 text-center text-sm font-medium text-muted-foreground">
@@ -379,7 +452,6 @@ export default function CalendarPage() {
                                     ))}
                                 </div>
                                 
-                                {/* Calendar days */}
                                 <div className="grid grid-cols-7">
                                     {days.map((date, index) => {
                                         if (!date) {
@@ -408,7 +480,6 @@ export default function CalendarPage() {
                                                     {date.getDate()}
                                                 </span>
                                                 
-                                                {/* Event dots */}
                                                 <div className="mt-1 space-y-1">
                                                     {dayEvents.slice(0, 3).map(event => (
                                                         <div
@@ -506,8 +577,128 @@ export default function CalendarPage() {
                             </div>
                         </div>
                     </div>
-                ) : (
-                    /* Agenda View */
+                )}
+
+                {/* Week View */}
+                {viewMode === "week" && (
+                    <div className="rounded-2xl border border-border bg-background overflow-hidden">
+                        {/* Week header */}
+                        <div className="grid grid-cols-8 border-b border-border">
+                            <div className="p-3 text-center text-sm font-medium text-muted-foreground border-r border-border">
+                                <Clock className="h-4 w-4 mx-auto" />
+                            </div>
+                            {weekDays.map((date, index) => (
+                                <div 
+                                    key={index}
+                                    className={cn(
+                                        "p-3 text-center border-r border-border last:border-r-0",
+                                        isToday(date) && "bg-primary/5"
+                                    )}
+                                >
+                                    <p className="text-xs text-muted-foreground">{DAYS[index]}</p>
+                                    <p className={cn(
+                                        "text-lg font-semibold mt-1",
+                                        isToday(date) && "text-primary"
+                                    )}>
+                                        {date.getDate()}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Time grid */}
+                        <div className="max-h-[600px] overflow-y-auto">
+                            <div className="grid grid-cols-8">
+                                {/* Time column */}
+                                <div className="border-r border-border">
+                                    {HOURS.map(hour => (
+                                        <div 
+                                            key={hour} 
+                                            className="h-[60px] px-2 py-1 text-xs text-muted-foreground text-right border-b border-border"
+                                        >
+                                            {hour.toString().padStart(2, "0")}:00
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Day columns */}
+                                {weekDays.map((date, dayIndex) => {
+                                    const dayEvents = getEventsForDate(date).filter(e => e.time);
+                                    const allDayEvents = getEventsForDate(date).filter(e => !e.time);
+                                    
+                                    return (
+                                        <div 
+                                            key={dayIndex}
+                                            className={cn(
+                                                "relative border-r border-border last:border-r-0",
+                                                isToday(date) && "bg-primary/5"
+                                            )}
+                                        >
+                                            {/* All day events */}
+                                            {allDayEvents.length > 0 && (
+                                                <div className="absolute top-0 left-0 right-0 p-1 z-10">
+                                                    {allDayEvents.slice(0, 2).map(event => (
+                                                        <div
+                                                            key={event.id}
+                                                            className="text-xs px-1.5 py-0.5 rounded mb-1 truncate"
+                                                            style={{ 
+                                                                backgroundColor: `${event.color}30`,
+                                                                color: event.color,
+                                                                borderLeft: `3px solid ${event.color}`
+                                                            }}
+                                                        >
+                                                            {event.title}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Hour slots */}
+                                            {HOURS.map(hour => (
+                                                <div 
+                                                    key={hour}
+                                                    className="h-[60px] border-b border-border hover:bg-accent/30 transition-colors cursor-pointer"
+                                                />
+                                            ))}
+
+                                            {/* Timed events */}
+                                            {dayEvents.map(event => {
+                                                if (!event.time) return null;
+                                                const top = getEventPosition(event.time);
+                                                const height = getEventHeight(event.time, event.endTime);
+                                                
+                                                return (
+                                                    <motion.div
+                                                        key={event.id}
+                                                        initial={{ opacity: 0, scale: 0.9 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        className="absolute left-1 right-1 rounded-lg px-2 py-1 cursor-pointer hover:opacity-90 transition-opacity overflow-hidden"
+                                                        style={{
+                                                            top: `${top}px`,
+                                                            height: `${height}px`,
+                                                            backgroundColor: `${event.color}20`,
+                                                            borderLeft: `3px solid ${event.color}`,
+                                                        }}
+                                                    >
+                                                        <p className="text-xs font-medium truncate" style={{ color: event.color }}>
+                                                            {event.title}
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {event.time}{event.endTime && ` - ${event.endTime}`}
+                                                        </p>
+                                                    </motion.div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Agenda View */}
+                {viewMode === "agenda" && (
                     <div className="max-w-2xl">
                         <div className="space-y-2">
                             {getUpcomingEvents().map((event, index) => {
