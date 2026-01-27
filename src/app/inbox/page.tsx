@@ -71,7 +71,7 @@ export default function InboxPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
     const { conversations, loading, markAsRead, markAsResolved, takeOver, assignToAgent } = useConversations();
-    const { messages, loading: messagesLoading, sendMessage, approveDraft, editDraft, deleteDraft } = useMessages(selectedConversation?.id || null);
+    const { messages, loading: messagesLoading, sendMessage, approveDraft, editDraft, deleteDraft, regenerateDraft } = useMessages(selectedConversation?.id || null);
     const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
     const [editingDraftContent, setEditingDraftContent] = useState('');
     const { spaces } = useSpaces();
@@ -401,7 +401,7 @@ export default function InboxPage() {
                                                                     ✏️ Editar
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => deleteDraft(msg.id)}
+                                                                    onClick={() => regenerateDraft(msg.id)}
                                                                     className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-500 text-white hover:bg-gray-600 transition-colors flex items-center gap-1"
                                                                 >
                                                                     🔄 Rehacer

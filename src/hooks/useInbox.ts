@@ -285,6 +285,32 @@ export function useMessages(conversationId: string | null) {
     return { error };
   };
 
+  const regenerateDraft = async (messageId: string) => {
+    if (!conversationId) return { error: 'No conversation selected' };
+
+    // 1. Delete current draft from Supabase
+    const supabase = createClient();
+    await supabase.from('messages').delete().eq('id', messageId);
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+
+    // 2. Call regenerate webhook
+    try {
+      await fetch('https://aidaptivecore.igreen.com.ar/webhook/regenerate-draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation_id: conversationId }),
+      });
+
+      // 3. Wait for Claude to generate new draft, then refetch
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      await fetchMessages();
+      return { error: null };
+    } catch (err) {
+      console.error('Regenerate draft error:', err);
+      return { error: String(err) };
+    }
+  };
+
   return {
     messages,
     loading,
@@ -292,6 +318,7 @@ export function useMessages(conversationId: string | null) {
     approveDraft,
     editDraft,
     deleteDraft,
+    regenerateDraft,
     refetch: fetchMessages,
   };
 }
