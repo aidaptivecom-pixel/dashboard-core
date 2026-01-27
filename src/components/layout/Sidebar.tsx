@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Home, Folder, Inbox, Calendar, Target, Settings, ChevronLeft, ChevronRight, Search, Sparkles, ChevronDown, Plus, Brain, BarChart3, LogOut, X } from "lucide-react";
+import { Home, Folder, Inbox, Calendar, Target, Settings, ChevronLeft, ChevronRight, Search, Sparkles, ChevronDown, Plus, Brain, BarChart3, LogOut, X, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSpaces } from "@/hooks/useSpaces";
 import { useCaptures } from "@/hooks/useCaptures";
@@ -21,6 +21,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
     { icon: Home, label: "Inicio", href: "/" },
     { icon: Inbox, label: "Captura", href: "/capture" },
+    { icon: MessageSquare, label: "Inbox", href: "/inbox" },
     { icon: Calendar, label: "Calendario", href: "/calendar" },
     { icon: Target, label: "Objetivos", href: "/goals" },
     { icon: Brain, label: "Focus", href: "/focus" },
