@@ -71,7 +71,9 @@ export default function InboxPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
     const { conversations, loading, markAsRead, markAsResolved, takeOver, assignToAgent } = useConversations();
-    const { messages, loading: messagesLoading, sendMessage } = useMessages(selectedConversation?.id || null);
+    const { messages, loading: messagesLoading, sendMessage, approveDraft, editDraft, deleteDraft } = useMessages(selectedConversation?.id || null);
+    const [editingDraftId, setEditingDraftId] = useState<string | null>(null);
+    const [editingDraftContent, setEditingDraftContent] = useState('');
     const { spaces } = useSpaces();
 
     // Auto-scroll to bottom when new messages arrive
@@ -343,9 +345,71 @@ export default function InboxPage() {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 className={cn(
                                                     "flex",
-                                                    msg.direction === 'outbound' ? 'justify-end' : 'justify-start'
+                                                    msg.sent_by === 'draft' ? 'justify-end' : msg.direction === 'outbound' ? 'justify-end' : 'justify-start'
                                                 )}
                                             >
+                                                {msg.sent_by === 'draft' ? (
+                                                    <div className="max-w-[70%] space-y-1">
+                                                        <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">🤖 Borrador del Closer</span>
+                                                        <div className="rounded-2xl px-4 py-2 bg-amber-100 dark:bg-amber-900/30 border border-dashed border-amber-300 dark:border-amber-700 rounded-br-md">
+                                                            {editingDraftId === msg.id ? (
+                                                                <div className="space-y-2">
+                                                                    <textarea
+                                                                        value={editingDraftContent}
+                                                                        onChange={(e) => setEditingDraftContent(e.target.value)}
+                                                                        rows={4}
+                                                                        className="w-full px-3 py-2 rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-amber-950/50 focus:outline-none focus:ring-2 focus:ring-amber-400/40 resize-none text-sm"
+                                                                    />
+                                                                    <div className="flex gap-2">
+                                                                        <button
+                                                                            onClick={async () => {
+                                                                                await editDraft(msg.id, editingDraftContent);
+                                                                                setEditingDraftId(null);
+                                                                            }}
+                                                                            className="px-3 py-1 rounded-lg text-xs font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                                                                        >
+                                                                            Guardar
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => setEditingDraftId(null)}
+                                                                            className="px-3 py-1 rounded-lg text-xs font-medium bg-muted hover:bg-accent transition-colors"
+                                                                        >
+                                                                            Cancelar
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                                            )}
+                                                            <div className="flex items-center gap-1 mt-1 text-xs text-amber-600/70 dark:text-amber-400/70 justify-end">
+                                                                <Bot className="h-3 w-3" />
+                                                                <span>{new Date(msg.created_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })}</span>
+                                                            </div>
+                                                        </div>
+                                                        {editingDraftId !== msg.id && (
+                                                            <div className="flex gap-2 justify-end">
+                                                                <button
+                                                                    onClick={() => approveDraft(msg.id)}
+                                                                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-green-500 text-white hover:bg-green-600 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    ✅ Enviar
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => { setEditingDraftId(msg.id); setEditingDraftContent(msg.content); }}
+                                                                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    ✏️ Editar
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => deleteDraft(msg.id)}
+                                                                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-500 text-white hover:bg-gray-600 transition-colors flex items-center gap-1"
+                                                                >
+                                                                    🔄 Rehacer
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
                                                 <div
                                                     className={cn(
                                                         "max-w-[70%] rounded-2xl px-4 py-2",
@@ -365,6 +429,7 @@ export default function InboxPage() {
                                                         {msg.direction === 'outbound' && <CheckCheck className="h-3 w-3" />}
                                                     </div>
                                                 </div>
+                                                )}
                                             </motion.div>
                                         ))
                                     ) : (

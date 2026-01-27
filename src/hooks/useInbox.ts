@@ -38,7 +38,7 @@ export interface Message {
   id: string;
   conversation_id: string;
   direction: 'inbound' | 'outbound';
-  sent_by: 'client' | 'agent' | 'human';
+  sent_by: 'client' | 'agent' | 'human' | 'draft';
   content: string;
   content_type: 'text' | 'image' | 'audio' | 'document' | 'location';
   media_url: string | null;
@@ -229,10 +229,69 @@ export function useMessages(conversationId: string | null) {
     }
   };
 
+  const approveDraft = async (messageId: string) => {
+    if (!conversationId) return { error: 'No conversation' };
+    
+    // Get the draft message content
+    const draft = messages.find(m => m.id === messageId);
+    if (!draft) return { error: 'Draft not found' };
+
+    // Send via WhatsApp webhook
+    try {
+      await fetch('https://aidaptivecore.igreen.com.ar/webhook/whatsapp-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          message: draft.content,
+          sent_by: 'agent',
+        }),
+      });
+
+      // Delete the draft (the webhook creates the real message)
+      const supabase = createClient();
+      await supabase.from('messages').delete().eq('id', messageId);
+      
+      await fetchMessages();
+      return { error: null };
+    } catch (err) {
+      return { error: String(err) };
+    }
+  };
+
+  const editDraft = async (messageId: string, newContent: string) => {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('messages')
+      .update({ content: newContent })
+      .eq('id', messageId);
+    
+    if (!error) {
+      setMessages(prev => prev.map(m => m.id === messageId ? { ...m, content: newContent } : m));
+    }
+    return { error };
+  };
+
+  const deleteDraft = async (messageId: string) => {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId);
+    
+    if (!error) {
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    }
+    return { error };
+  };
+
   return {
     messages,
     loading,
     sendMessage,
+    approveDraft,
+    editDraft,
+    deleteDraft,
     refetch: fetchMessages,
   };
 }
