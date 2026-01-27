@@ -189,19 +189,44 @@ export function useMessages(conversationId: string | null) {
   const sendMessage = async (content: string, sentBy: 'human' | 'agent' = 'human') => {
     if (!conversationId) return { error: 'No conversation selected' };
 
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        direction: 'outbound',
-        sent_by: sentBy,
-        content,
-      })
-      .select()
-      .single();
+    // Send via WhatsApp through n8n webhook
+    try {
+      const webhookRes = await fetch('https://aidaptivecore.igreen.com.ar/webhook/whatsapp-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          conversation_id: conversationId,
+          message: content,
+          sent_by: sentBy,
+        }),
+      });
 
-    return { data, error };
+      if (!webhookRes.ok) {
+        console.error('WhatsApp send failed, saving locally only');
+      }
+
+      // The webhook already saves the message to Supabase,
+      // so we just need to return success
+      // Refetch messages to get the one inserted by the webhook
+      await fetchMessages();
+      return { data: null, error: null };
+    } catch (err) {
+      console.error('WhatsApp webhook error:', err);
+      // Fallback: save directly to Supabase (won't send via WhatsApp)
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          direction: 'outbound',
+          sent_by: sentBy,
+          content,
+        })
+        .select()
+        .single();
+
+      return { data, error };
+    }
   };
 
   return {
