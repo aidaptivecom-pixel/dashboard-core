@@ -46,6 +46,8 @@ export default function CapturePage() {
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const cameraInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const mobileInputRef = useRef<HTMLInputElement>(null);
     const recordingInterval = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
@@ -137,6 +139,14 @@ export default function CapturePage() {
         }
     };
 
+    const focusCaptureInput = () => {
+        if (window.innerWidth < 768) {
+            mobileInputRef.current?.focus();
+        } else {
+            textareaRef.current?.focus();
+        }
+    };
+
     const filteredCaptures = filter === "all" ? captures : captures.filter(c => c.type === filter);
 
     const filterCounts = {
@@ -188,7 +198,7 @@ export default function CapturePage() {
 
                 <form onSubmit={handleSubmit} className="mb-6 hidden md:block">
                     <div className="relative">
-                        <textarea placeholder="Escribe una idea, pega un link, o arrastra una imagen..." value={newCapture} onChange={(e) => setNewCapture(e.target.value)} rows={3} className="w-full px-4 py-4 pr-36 rounded-2xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg resize-none" />
+                        <textarea ref={textareaRef} placeholder="Escribe una idea, pega un link, o arrastra una imagen..." value={newCapture} onChange={(e) => setNewCapture(e.target.value)} rows={3} className="w-full px-4 py-4 pr-36 rounded-2xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-lg resize-none" />
                         <div className="absolute right-3 bottom-3 flex items-center gap-1">
                             <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2.5 rounded-xl hover:bg-accent transition-colors" title="Subir imagen">
                                 <ImageIcon className="h-5 w-5 text-muted-foreground" />
@@ -300,9 +310,18 @@ export default function CapturePage() {
                     )}
 
                     {!loading && filteredCaptures.length === 0 && (
-                        <div className="text-center py-12">
-                            <Inbox className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                            <p className="text-muted-foreground">{filter === "all" ? "No hay capturas pendientes" : `No hay ${typeConfig[filter as keyof typeof typeConfig]?.plural}`}</p>
+                        <div className="text-center py-16">
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-5">
+                                <Inbox className="h-10 w-10 text-primary/40" />
+                            </div>
+                            <p className="text-lg font-medium mb-1">{filter === "all" ? "No hay capturas pendientes" : `No hay ${typeConfig[filter as keyof typeof typeConfig]?.plural}`}</p>
+                            <p className="text-muted-foreground text-sm mb-6">Tocá + para capturar una idea</p>
+                            <button
+                                onClick={focusCaptureInput}
+                                className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary text-white shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:scale-105 active:scale-95 transition-all text-2xl font-light"
+                            >
+                                +
+                            </button>
                         </div>
                     )}
                 </div>
@@ -312,7 +331,7 @@ export default function CapturePage() {
 
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border md:hidden z-50">
                     <div className="flex items-center gap-2 max-w-3xl mx-auto">
-                        <input type="text" placeholder="Capturar idea..." value={newCapture} onChange={(e) => setNewCapture(e.target.value)} className="flex-1 px-4 py-3 rounded-2xl border border-border bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20" />
+                        <input ref={mobileInputRef} type="text" placeholder="Capturar idea..." value={newCapture} onChange={(e) => setNewCapture(e.target.value)} className="flex-1 px-4 py-3 rounded-2xl border border-border bg-muted focus:outline-none focus:ring-2 focus:ring-primary/20" />
                         <button onClick={() => cameraInputRef.current?.click()} className="p-3 rounded-2xl bg-muted hover:bg-accent transition-colors">
                             <Camera className="h-5 w-5" />
                         </button>

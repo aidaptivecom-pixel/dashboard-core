@@ -286,16 +286,16 @@ export default function InboxPage() {
                             <>
                                 {/* Chat header */}
                                 <div className="p-4 border-b border-border flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <button onClick={() => setMobileView('list')} className="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-accent transition-colors">
+                                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                                        <button onClick={() => setMobileView('list')} className="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-accent transition-colors flex-shrink-0">
                                             <ArrowLeft className="h-5 w-5" />
                                         </button>
-                                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center font-medium">
+                                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center font-medium flex-shrink-0">
                                             {selectedConversation.contact?.name.charAt(0).toUpperCase()}
                                         </div>
-                                        <div>
-                                            <h3 className="font-medium">{selectedConversation.contact?.name}</h3>
-                                            <p className="text-xs text-muted-foreground flex items-center gap-2">
+                                        <div className="min-w-0">
+                                            <h3 className="font-medium truncate">{selectedConversation.contact?.name}</h3>
+                                            <p className="text-xs text-muted-foreground items-center gap-2 hidden sm:flex">
                                                 {selectedConversation.contact?.phone || selectedConversation.contact?.email}
                                                 {selectedConversation.space && (
                                                     <span className="px-1.5 py-0.5 rounded bg-muted">
@@ -306,31 +306,34 @@ export default function InboxPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                                         {selectedConversation.assigned_to === 'agent' ? (
                                             <button
                                                 onClick={() => takeOver(selectedConversation.id)}
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-border hover:bg-accent transition-colors"
+                                                className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm border border-border hover:bg-accent transition-colors"
+                                                title="Tomar control"
                                             >
                                                 <UserCheck className="h-4 w-4" />
-                                                Tomar control
+                                                <span className="hidden sm:inline">Tomar control</span>
                                             </button>
                                         ) : (
                                             <button
                                                 onClick={() => assignToAgent(selectedConversation.id)}
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-border hover:bg-accent transition-colors"
+                                                className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm border border-border hover:bg-accent transition-colors"
+                                                title="Asignar a IA"
                                             >
                                                 <Bot className="h-4 w-4" />
-                                                Asignar a IA
+                                                <span className="hidden sm:inline">Asignar a IA</span>
                                             </button>
                                         )}
                                         {selectedConversation.status !== 'resolved' && (
                                             <button
                                                 onClick={() => markAsResolved(selectedConversation.id)}
-                                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                                                className="flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-lg text-sm bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors"
+                                                title="Resolver"
                                             >
                                                 <Check className="h-4 w-4" />
-                                                Resolver
+                                                <span className="hidden sm:inline">Resolver</span>
                                             </button>
                                         )}
                                     </div>
