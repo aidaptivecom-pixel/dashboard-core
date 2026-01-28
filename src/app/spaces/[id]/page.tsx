@@ -44,8 +44,9 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useGoals } from "@/hooks/useGoals";
 import { useTasks } from "@/hooks/useTasks";
-import { useFolders } from "@/hooks/useFolders";
+import { useFolders, Folder as FolderData } from "@/hooks/useFolders";
 import { useFiles } from "@/hooks/useFiles";
+import { SystemFolderView } from "@/components/project/SystemFolderView";
 
 interface Space {
     id: string;
@@ -71,6 +72,7 @@ interface FolderType {
     name: string;
     icon: string | null;
     parent_id: string | null;
+    system_view: string | null;
 }
 
 const getFileIcon = (type: string) => {
@@ -131,6 +133,7 @@ export default function SpacePage() {
     const [notes, setNotes] = useState<Note[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+    const [currentFolderSystemView, setCurrentFolderSystemView] = useState<string | null>(null);
     const [folderPath, setFolderPath] = useState<FolderType[]>([]);
     const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
     const [searchQuery, setSearchQuery] = useState("");
@@ -202,9 +205,11 @@ export default function SpacePage() {
     const navigateToFolder = async (folderId: string | null, folder?: FolderType) => {
         if (folderId === null) {
             setCurrentFolderId(null);
+            setCurrentFolderSystemView(null);
             setFolderPath([]);
         } else if (folder) {
             setCurrentFolderId(folderId);
+            setCurrentFolderSystemView(folder.system_view || null);
             const existingIndex = folderPath.findIndex(f => f.id === folderId);
             if (existingIndex >= 0) {
                 setFolderPath(folderPath.slice(0, existingIndex + 1));
@@ -415,6 +420,35 @@ export default function SpacePage() {
                 {/* FILES TAB */}
                 {activeTab === "files" && (
                     <>
+                        {/* System Folder View */}
+                        {currentFolderSystemView && (
+                            <>
+                                {/* Breadcrumb for system folders */}
+                                <div className="flex items-center gap-1 mb-4 text-sm">
+                                    <button onClick={() => navigateToFolder(null)} className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-accent transition-colors">
+                                        <Home className="h-4 w-4" />
+                                        <span>{space.name}</span>
+                                    </button>
+                                    {folderPath.map((folder, index) => (
+                                        <div key={folder.id} className="flex items-center">
+                                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                            <button onClick={() => navigateToFolder(folder.id, folder)} className={cn("px-2 py-1 rounded-lg hover:bg-accent transition-colors", index === folderPath.length - 1 && "text-primary font-medium")}>
+                                                {folder.name}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                                <SystemFolderView 
+                                    systemView={currentFolderSystemView} 
+                                    spaceId={spaceId} 
+                                    spaceColor={space.color || "#4F6BFF"} 
+                                />
+                            </>
+                        )}
+
+                        {/* Normal folder content */}
+                        {!currentFolderSystemView && (
+                        <>
                         {/* Breadcrumb */}
                         <div className="flex items-center gap-1 mb-4 text-sm">
                             <button onClick={() => navigateToFolder(null)} className={cn("flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-accent transition-colors", !currentFolderId && "text-primary font-medium")}>
@@ -455,7 +489,7 @@ export default function SpacePage() {
                                     <h3 className="text-sm font-medium text-muted-foreground mb-3">Carpetas</h3>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                         {filteredFolders.map((folder) => (
-                                            <motion.button key={folder.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} whileHover={{ scale: 1.02 }} onClick={() => navigateToFolder(folder.id, { id: folder.id, name: folder.name, icon: folder.icon, parent_id: folder.parent_id })} className="group p-4 rounded-2xl border border-border bg-background hover:bg-accent hover:border-primary/20 text-left transition-all">
+                                            <motion.button key={folder.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} whileHover={{ scale: 1.02 }} onClick={() => navigateToFolder(folder.id, { id: folder.id, name: folder.name, icon: folder.icon, parent_id: folder.parent_id, system_view: (folder as any).system_view || null })} className="group p-4 rounded-2xl border border-border bg-background hover:bg-accent hover:border-primary/20 text-left transition-all">
                                                 <div className={cn("p-3 rounded-xl", getFileColor("folder"))}>
                                                     <Folder className="h-6 w-6" />
                                                 </div>
@@ -519,6 +553,8 @@ export default function SpacePage() {
                                 </div>
                             )}
                         </div>
+                    </>
+                        )}
                     </>
                 )}
 

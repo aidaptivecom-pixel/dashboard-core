@@ -14,7 +14,10 @@ interface Folder {
   sort_order: number | null;
   created_at: string | null;
   updated_at: string | null;
+  system_view: string | null; // 'context' | 'commercial' | 'technical' | 'meetings' | null
 }
+
+export type { Folder };
 
 export function useFolders(spaceId: string, parentId?: string | null) {
   const [folders, setFolders] = useState<Folder[]>([]);
