@@ -137,7 +137,7 @@ export function ProjectContextView({ spaceId, spaceColor = "#4F6BFF" }: ProjectC
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />
-            Actualizado {formatTimeAgo(context?.updated_at)}
+            Actualizado {formatTimeAgo(context?.updated_at || null)}
             {context?.updated_by && <span className="text-xs">por {context.updated_by}</span>}
           </div>
         </div>
