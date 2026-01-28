@@ -81,92 +81,92 @@ export default function Home() {
     return (
         <MainLayout>
             <div className="max-w-5xl mx-auto">
-                <motion.div className="mb-8" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-                    <p className="text-muted-foreground flex items-center gap-2 mb-1">
-                        <Clock className="h-4 w-4" />
+                <motion.div className="mb-5 sm:mb-8" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
+                    <p className="text-muted-foreground flex items-center gap-2 mb-1 text-xs sm:text-sm">
+                        <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         {currentTime} · {new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
                     </p>
-                    <h1 className="text-3xl font-bold">
+                    <h1 className="text-2xl sm:text-3xl font-bold">
                         {greeting}, <span className="text-gradient">{userName}</span>
                     </h1>
                 </motion.div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-6 sm:mb-8">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                        <Link href="/capture" className="block p-4 rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 transition-all group">
-                            <div className="flex items-center justify-between mb-2">
-                                <Inbox className="h-5 w-5 text-primary" />
-                                {unprocessedCount > 0 && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">Nuevo</span>}
+                        <Link href="/capture" className="block p-3 sm:p-4 rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/20 transition-all group">
+                            <div className="flex items-center justify-between mb-1 sm:mb-2">
+                                <Inbox className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                                {unprocessedCount > 0 && <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full bg-primary/20 text-primary font-medium">Nuevo</span>}
                             </div>
-                            <p className="text-3xl font-bold"><AnimatedNumber value={unprocessedCount} /></p>
-                            <p className="text-xs text-muted-foreground">En captura</p>
-                            <ArrowRight className="h-4 w-4 text-primary mt-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <p className="text-2xl sm:text-3xl font-bold"><AnimatedNumber value={unprocessedCount} /></p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">En captura</p>
+                            <ArrowRight className="h-4 w-4 text-primary mt-1 sm:mt-2 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </Link>
                     </motion.div>
                     
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="p-4 rounded-2xl border border-border bg-gradient-to-br from-mint/5 to-mint/10">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="p-3 sm:p-4 rounded-2xl border border-border bg-gradient-to-br from-mint/5 to-mint/10">
                         <div className="flex items-center justify-between">
                             <div>
-                                <CheckCircle2 className="h-5 w-5 text-mint mb-2" />
-                                <p className="text-3xl font-bold">{completedTasks}/{todayTasks.length}</p>
-                                <p className="text-xs text-muted-foreground">Tareas hoy</p>
+                                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5 text-mint mb-1 sm:mb-2" />
+                                <p className="text-2xl sm:text-3xl font-bold">{completedTasks}/{todayTasks.length}</p>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground">Tareas hoy</p>
                             </div>
-                            <ProgressRing progress={taskProgress} color="#4ECDC4" />
+                            <ProgressRing progress={taskProgress} size={36} color="#4ECDC4" />
                         </div>
                     </motion.div>
                     
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-4 rounded-2xl border border-border bg-gradient-to-br from-purple/5 to-purple/10">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-3 sm:p-4 rounded-2xl border border-border bg-gradient-to-br from-purple/5 to-purple/10">
                         <div className="flex items-center justify-between">
                             <div>
-                                <FolderOpen className="h-5 w-5 text-purple mb-2" />
-                                <p className="text-3xl font-bold"><AnimatedNumber value={spaces.length} /></p>
-                                <p className="text-xs text-muted-foreground">Espacios</p>
+                                <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5 text-purple mb-1 sm:mb-2" />
+                                <p className="text-2xl sm:text-3xl font-bold"><AnimatedNumber value={spaces.length} /></p>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground">Espacios</p>
                             </div>
-                            <div className="flex flex-col items-end gap-1">
-                                {spaces.slice(0, 3).map(s => (<span key={s.id} className="text-lg">{s.icon}</span>))}
+                            <div className="flex flex-col items-end gap-0.5 sm:gap-1">
+                                {spaces.slice(0, 3).map(s => (<span key={s.id} className="text-base sm:text-lg">{s.icon}</span>))}
                             </div>
                         </div>
                     </motion.div>
                     
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                        <Link href="/goals" className="block p-4 rounded-2xl border border-border bg-gradient-to-br from-coral/5 to-coral/10 hover:from-coral/10 hover:to-coral/20 transition-all group">
-                            <div className="flex items-center justify-between mb-2">
-                                <Target className="h-5 w-5 text-coral" />
-                                <div className="flex items-center gap-1 text-xs text-coral">
+                        <Link href="/goals" className="block p-3 sm:p-4 rounded-2xl border border-border bg-gradient-to-br from-coral/5 to-coral/10 hover:from-coral/10 hover:to-coral/20 transition-all group">
+                            <div className="flex items-center justify-between mb-1 sm:mb-2">
+                                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-coral" />
+                                <div className="flex items-center gap-1 text-[10px] sm:text-xs text-coral">
                                     <TrendingUp className="h-3 w-3" />
                                     <span>{goalsProgress}%</span>
                                 </div>
                             </div>
-                            <p className="text-3xl font-bold">{activeGoals.length}</p>
-                            <p className="text-xs text-muted-foreground">Metas activas</p>
-                            <ArrowRight className="h-4 w-4 text-coral mt-2 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <p className="text-2xl sm:text-3xl font-bold">{activeGoals.length}</p>
+                            <p className="text-[10px] sm:text-xs text-muted-foreground">Metas activas</p>
+                            <ArrowRight className="h-4 w-4 text-coral mt-1 sm:mt-2 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </Link>
                     </motion.div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     <div className="lg:col-span-2">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="font-semibold flex items-center gap-2"><FolderOpen className="h-5 w-5" />Espacios</h2>
+                        <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base"><FolderOpen className="h-4 w-4 sm:h-5 sm:w-5" />Espacios</h2>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                             {spaces.map((space, index) => (
                                 <motion.div key={space.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + index * 0.05 }}>
-                                    <Link href={`/spaces/${space.id}`} className="block p-4 rounded-2xl border border-border bg-background hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all group">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl text-2xl" style={{ backgroundColor: `${space.color}15` }}>{space.icon}</div>
+                                    <Link href={`/spaces/${space.id}`} className="block p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-border bg-background hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all group">
+                                        <div className="flex items-center gap-2.5 sm:gap-3">
+                                            <div className="flex h-9 w-9 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl text-lg sm:text-2xl flex-shrink-0" style={{ backgroundColor: `${space.color}15` }}>{space.icon}</div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium truncate group-hover:text-primary transition-colors">{space.name}</p>
-                                                <p className="text-xs text-muted-foreground">{space.description || "Sin descripción"}</p>
+                                                <p className="text-sm sm:text-base font-medium group-hover:text-primary transition-colors line-clamp-1">{space.name}</p>
+                                                <p className="text-[11px] sm:text-xs text-muted-foreground line-clamp-2">{space.description || "Sin descripción"}</p>
                                             </div>
-                                            <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all" />
+                                            <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all flex-shrink-0" />
                                         </div>
                                     </Link>
                                 </motion.div>
                             ))}
                             {spaces.length === 0 && (
-                                <div className="col-span-2 text-center py-8 text-muted-foreground">
+                                <div className="col-span-1 sm:col-span-2 text-center py-8 text-muted-foreground">
                                     <p>No hay espacios creados</p>
                                     <p className="text-sm">Crea uno desde el sidebar</p>
                                 </div>
@@ -177,7 +177,7 @@ export default function Home() {
                     <div>
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                             <div className="flex items-center justify-between mb-3">
-                                <h2 className="font-semibold flex items-center gap-2"><Zap className="h-5 w-5 text-yellow-500" />Hoy</h2>
+                                <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base"><Zap className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />Hoy</h2>
                                 <Link href="/goals" className="p-1 rounded-lg hover:bg-accent transition-colors"><Plus className="h-4 w-4" /></Link>
                             </div>
                             
@@ -209,7 +209,7 @@ export default function Home() {
 
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-6">
                             <div className="flex items-center justify-between mb-3">
-                                <h2 className="font-semibold flex items-center gap-2"><Target className="h-5 w-5" />Metas</h2>
+                                <h2 className="font-semibold flex items-center gap-2 text-sm sm:text-base"><Target className="h-4 w-4 sm:h-5 sm:w-5" />Metas</h2>
                                 <Link href="/goals" className="text-xs text-primary hover:underline">Ver todas</Link>
                             </div>
                             
