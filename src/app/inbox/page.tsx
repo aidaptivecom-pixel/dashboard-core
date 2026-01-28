@@ -24,6 +24,7 @@ import {
     ChevronDown,
     Loader2,
     X,
+    ArrowLeft,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useConversations, useMessages, Conversation } from "@/hooks/useInbox";
@@ -67,6 +68,7 @@ export default function InboxPage() {
     const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
     const [messageInput, setMessageInput] = useState('');
     const [showFilters, setShowFilters] = useState(false);
+    const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
     
@@ -148,7 +150,7 @@ export default function InboxPage() {
                 {/* Main content */}
                 <div className="flex-1 flex gap-4 min-h-0">
                     {/* Conversations list */}
-                    <div className="w-full md:w-96 flex flex-col border border-border rounded-2xl bg-background overflow-hidden">
+                    <div className={cn("w-full md:w-96 flex flex-col border border-border rounded-2xl bg-background overflow-hidden", mobileView === 'chat' && "hidden md:flex")}>
                         {/* Search & Filters */}
                         <div className="p-3 border-b border-border space-y-3">
                             <div className="relative">
@@ -219,7 +221,7 @@ export default function InboxPage() {
                                 filteredConversations.map((conv) => (
                                     <button
                                         key={conv.id}
-                                        onClick={() => setSelectedConversation(conv)}
+                                        onClick={() => { setSelectedConversation(conv); setMobileView('chat'); }}
                                         className={cn(
                                             "w-full p-3 flex gap-3 border-b border-border hover:bg-accent/50 transition-colors text-left",
                                             selectedConversation?.id === conv.id && "bg-accent"
@@ -279,12 +281,15 @@ export default function InboxPage() {
                     </div>
 
                     {/* Chat view */}
-                    <div className="hidden md:flex flex-1 flex-col border border-border rounded-2xl bg-background overflow-hidden">
+                    <div className={cn("flex-1 flex-col border border-border rounded-2xl bg-background overflow-hidden", mobileView === 'chat' ? "flex" : "hidden md:flex")}>
                         {selectedConversation ? (
                             <>
                                 {/* Chat header */}
                                 <div className="p-4 border-b border-border flex items-center justify-between">
                                     <div className="flex items-center gap-3">
+                                        <button onClick={() => setMobileView('list')} className="md:hidden p-1.5 -ml-1 rounded-lg hover:bg-accent transition-colors">
+                                            <ArrowLeft className="h-5 w-5" />
+                                        </button>
                                         <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center font-medium">
                                             {selectedConversation.contact?.name.charAt(0).toUpperCase()}
                                         </div>

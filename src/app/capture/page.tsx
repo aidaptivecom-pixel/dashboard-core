@@ -208,14 +208,14 @@ export default function CapturePage() {
                     <p className="text-muted-foreground text-sm">Arrastra archivos o screenshots aquí</p>
                 </div>
 
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+                <div className="flex gap-1.5 md:gap-2 mb-4 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {(["all", "idea", "voice", "image", "link", "note"] as FilterType[]).map((f) => {
                         const config = f === "all" ? { icon: Filter, label: "Todo" } : typeConfig[f];
                         const Icon = config.icon;
                         const count = filterCounts[f];
                         return (
-                            <button key={f} onClick={() => setFilter(f)} className={cn("flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all", filter === f ? "bg-primary text-white" : "bg-muted hover:bg-accent")}>
-                                <Icon className="h-4 w-4" />
+                            <button key={f} onClick={() => setFilter(f)} className={cn("flex items-center gap-1.5 md:gap-2 px-2.5 md:px-3 py-1.5 md:py-2 rounded-xl text-xs md:text-sm font-medium whitespace-nowrap transition-all", filter === f ? "bg-primary text-white" : "bg-muted hover:bg-accent")}>
+                                <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
                                 {config.label}
                                 {count > 0 && <span className={cn("text-xs px-1.5 rounded-full", filter === f ? "bg-white/20" : "bg-background")}>{count}</span>}
                             </button>

@@ -492,8 +492,8 @@ export default function CalendarPage() {
                 {showEventModal && (
                     <>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEventModal(false)} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-[5%] sm:top-[10%] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
-                            <div className="bg-background rounded-2xl border border-border shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-[5%] sm:top-[10%] inset-x-0 mx-auto w-[calc(100%-32px)] max-w-md z-50">
+                            <div className="bg-background rounded-2xl border border-border shadow-2xl p-4 sm:p-6 max-h-[85vh] overflow-y-auto overscroll-contain">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-semibold">{editingEvent ? "Editar evento" : "Nuevo evento"}</h3>
                                     <button onClick={() => setShowEventModal(false)} className="p-2 rounded-lg hover:bg-accent"><X className="h-5 w-5" /></button>
@@ -541,7 +541,7 @@ export default function CalendarPage() {
                                     <textarea placeholder="Descripción (opcional)" value={newEvent.description} onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })} className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none h-20" />
                                 </div>
 
-                                <div className="flex gap-3 mt-6">
+                                <div className="flex gap-2 sm:gap-3 mt-6">
                                     {editingEvent && (
                                         <button onClick={handleDeleteEvent} className="p-2.5 rounded-xl border border-red-200 text-red-500 hover:bg-red-50 transition-colors">
                                             <Trash2 className="h-5 w-5" />
