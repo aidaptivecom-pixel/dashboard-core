@@ -9,11 +9,11 @@ import { useCaptures } from "@/hooks/useCaptures";
 import { useSpaces } from "@/hooks/useSpaces";
 
 const typeConfig = {
-    note: { icon: FileText, color: "text-blue-500 bg-blue-500/10", label: "Nota" },
-    voice: { icon: Mic, color: "text-green-500 bg-green-500/10", label: "Audio" },
-    image: { icon: ImageIcon, color: "text-pink-500 bg-pink-500/10", label: "Imagen" },
-    link: { icon: Link2, color: "text-purple bg-purple/10", label: "Link" },
-    idea: { icon: Lightbulb, color: "text-yellow-500 bg-yellow-500/10", label: "Idea" },
+    note: { icon: FileText, color: "text-blue-500 bg-blue-500/10", label: "Nota", plural: "notas" },
+    voice: { icon: Mic, color: "text-green-500 bg-green-500/10", label: "Audio", plural: "audios" },
+    image: { icon: ImageIcon, color: "text-pink-500 bg-pink-500/10", label: "Imagen", plural: "imágenes" },
+    link: { icon: Link2, color: "text-purple bg-purple/10", label: "Link", plural: "links" },
+    idea: { icon: Lightbulb, color: "text-yellow-500 bg-yellow-500/10", label: "Idea", plural: "ideas" },
 };
 
 type FilterType = "all" | "idea" | "voice" | "image" | "link" | "note";
@@ -302,7 +302,7 @@ export default function CapturePage() {
                     {!loading && filteredCaptures.length === 0 && (
                         <div className="text-center py-12">
                             <Inbox className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                            <p className="text-muted-foreground">{filter === "all" ? "No hay capturas pendientes" : `No hay ${typeConfig[filter as keyof typeof typeConfig]?.label.toLowerCase()}s`}</p>
+                            <p className="text-muted-foreground">{filter === "all" ? "No hay capturas pendientes" : `No hay ${typeConfig[filter as keyof typeof typeConfig]?.plural}`}</p>
                         </div>
                     )}
                 </div>

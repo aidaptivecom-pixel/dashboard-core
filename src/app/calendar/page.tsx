@@ -492,8 +492,8 @@ export default function CalendarPage() {
                 {showEventModal && (
                     <>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowEventModal(false)} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-[10%] left-1/2 -translate-x-1/2 w-full max-w-md z-50 mx-4">
-                            <div className="bg-background rounded-2xl border border-border shadow-2xl p-6">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-[5%] sm:top-[10%] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md z-50">
+                            <div className="bg-background rounded-2xl border border-border shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
                                 <div className="flex items-center justify-between mb-4">
                                     <h3 className="text-lg font-semibold">{editingEvent ? "Editar evento" : "Nuevo evento"}</h3>
                                     <button onClick={() => setShowEventModal(false)} className="p-2 rounded-lg hover:bg-accent"><X className="h-5 w-5" /></button>
