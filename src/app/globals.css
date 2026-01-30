@@ -8,40 +8,40 @@
     --foreground: 222 47% 11%;
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-    --primary: 233 100% 65%;
+    --primary: 230 80% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
+    --secondary: 220 14% 96%;
     --secondary-foreground: 222 47% 11%;
     --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 210 40% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 220 14% 96%;
     --accent-foreground: 222 47% 11%;
     --border: 220 13% 91%;
-    --ring: 233 100% 65%;
-    --radius: 1rem;
+    --ring: 230 80% 55%;
+    --radius: 0.75rem;
     
-    /* App background - subtle gray */
-    --app-bg: 220 14% 94%;
+    /* App background - clean white */
+    --app-bg: 220 20% 97%;
   }
 
   .dark {
-    --background: 0 0% 9%;
-    --foreground: 210 40% 98%;
-    --card: 0 0% 9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 233 100% 65%;
+    --background: 220 15% 8%;
+    --foreground: 220 13% 95%;
+    --card: 220 15% 10%;
+    --card-foreground: 220 13% 95%;
+    --primary: 230 80% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 210 40% 98%;
-    --border: 0 0% 18%;
-    --ring: 233 100% 65%;
+    --secondary: 220 15% 15%;
+    --secondary-foreground: 220 13% 95%;
+    --muted: 220 15% 15%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 220 15% 15%;
+    --accent-foreground: 220 13% 95%;
+    --border: 220 15% 18%;
+    --ring: 230 80% 60%;
     
-    /* App background - deep dark */
-    --app-bg: 0 0% 4%;
+    /* App background - deep dark blue-ish */
+    --app-bg: 220 20% 5%;
   }
 }
 
@@ -57,70 +57,59 @@
 }
 
 @layer components {
-  /* Glassmorphism card variants */
+  /* Modern card - clean and minimal */
   .glass-card {
-    @apply relative overflow-hidden rounded-2xl border border-border/50 bg-white/80 backdrop-blur-sm;
-    @apply dark:bg-white/5 dark:border-white/10;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+    @apply relative overflow-hidden rounded-xl border border-border bg-card;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .glass-card {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
 
   .glass-card-blue {
-    @apply glass-card;
-    background: linear-gradient(135deg, rgba(79, 107, 255, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
-  }
-  .dark .glass-card-blue {
-    background: linear-gradient(135deg, rgba(79, 107, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    @apply glass-card border-l-4 border-l-blue-500;
   }
 
   .glass-card-coral {
-    @apply glass-card;
-    background: linear-gradient(135deg, rgba(255, 107, 107, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
-  }
-  .dark .glass-card-coral {
-    background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    @apply glass-card border-l-4 border-l-rose-500;
   }
 
   .glass-card-mint {
-    @apply glass-card;
-    background: linear-gradient(135deg, rgba(78, 205, 196, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
-  }
-  .dark .glass-card-mint {
-    background: linear-gradient(135deg, rgba(78, 205, 196, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    @apply glass-card border-l-4 border-l-emerald-500;
   }
 
   .glass-card-purple {
-    @apply glass-card;
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.12) 0%, rgba(255, 255, 255, 0.8) 100%);
-  }
-  .dark .glass-card-purple {
-    background: linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+    @apply glass-card border-l-4 border-l-violet-500;
   }
 
   /* Button variants */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium;
     @apply bg-primary text-primary-foreground;
-    @apply hover:bg-primary/90 transition-all duration-200;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+    @apply hover:opacity-90 transition-all duration-150;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2;
+    @apply active:scale-[0.98];
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium;
     @apply bg-secondary text-secondary-foreground;
-    @apply hover:bg-secondary/80 transition-all duration-200;
+    @apply hover:bg-secondary/80 transition-all duration-150;
+    @apply active:scale-[0.98];
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center rounded-xl px-4 py-2 text-sm font-medium;
-    @apply hover:bg-accent hover:text-accent-foreground transition-all duration-200;
+    @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium;
+    @apply hover:bg-accent hover:text-accent-foreground transition-all duration-150;
   }
 
   /* Input styling */
   .input-search {
-    @apply w-full rounded-xl border border-border bg-background px-4 py-2.5 text-sm;
+    @apply w-full rounded-lg border border-border bg-background px-4 py-2.5 text-sm;
     @apply placeholder:text-muted-foreground;
     @apply focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary;
-    @apply transition-all duration-200;
+    @apply transition-all duration-150;
   }
 
   /* Progress ring */
@@ -148,8 +137,8 @@
 
   /* Task item */
   .task-item {
-    @apply flex items-center gap-3 p-3 rounded-xl;
-    @apply hover:bg-accent/50 transition-all duration-200;
+    @apply flex items-center gap-3 p-3 rounded-lg;
+    @apply hover:bg-accent transition-all duration-150;
     @apply cursor-pointer;
   }
 
@@ -158,34 +147,54 @@
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
   }
   .energy-low {
-    @apply bg-coral/10 text-coral-dark dark:bg-coral/20 dark:text-coral-light;
+    @apply bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400;
   }
   .energy-medium {
-    @apply bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-400;
+    @apply bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400;
   }
   .energy-high {
-    @apply bg-mint/10 text-mint-dark dark:bg-mint/20 dark:text-mint-light;
+    @apply bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400;
+  }
+
+  /* Status badges */
+  .status-active {
+    @apply bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400;
+  }
+  .status-paused {
+    @apply bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400;
+  }
+  .status-blocked {
+    @apply bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400;
+  }
+  .status-completed {
+    @apply bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400;
   }
 }
 
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #4F6BFF 0%, #A855F7 100%);
+    background-image: linear-gradient(135deg, hsl(230 80% 55%) 0%, hsl(270 80% 60%) 100%);
   }
 
   .animate-in {
-    animation: fadeIn 0.3s ease-out;
+    animation: fadeIn 0.2s ease-out;
   }
 }
 
 /* Smooth theme transition */
 html {
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Focus mode overlay */
 .focus-overlay {
   @apply fixed inset-0 z-[100];
-  background: linear-gradient(180deg, rgba(15, 15, 16, 0.98) 0%, rgba(30, 30, 35, 0.98) 100%);
+  background: linear-gradient(180deg, hsl(220 20% 6% / 0.98) 0%, hsl(220 20% 10% / 0.98) 100%);
+}
+
+/* Keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
