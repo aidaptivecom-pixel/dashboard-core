@@ -95,7 +95,7 @@ export function Sidebar() {
                     <AnimatePresence>
                         {!collapsed && (
                             <motion.span initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="font-semibold text-lg">
-                                FocusFlow
+                                Aidaptive
                             </motion.span>
                         )}
                     </AnimatePresence>
