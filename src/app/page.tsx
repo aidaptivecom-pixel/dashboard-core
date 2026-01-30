@@ -2,13 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
     Clock, 
     CheckCircle2, 
     Circle, 
-    Plus, 
     Target, 
     Zap,
     Inbox,
@@ -17,7 +16,6 @@ import {
     AlertCircle,
     ChevronRight
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/useProfile";
 import { useSpaces } from "@/hooks/useSpaces";
 import { useCaptures } from "@/hooks/useCaptures";
@@ -53,15 +51,16 @@ export default function Home() {
     };
 
     const today = new Date().toISOString().split("T")[0];
-    const todayTasks = tasks.filter(t => !t.due_date || t.due_date === today);
+    // Only tasks with today's date (not all undated tasks)
+    const todayTasks = tasks.filter(t => t.due_date === today);
     const pendingTasks = todayTasks.filter(t => !t.completed);
     const completedToday = todayTasks.filter(t => t.completed).length;
     
     const userName = profile?.name?.split(" ")[0] || "Usuario";
     const recentSpaces = spaces.slice(0, 6);
 
-    // Limit tasks to show
-    const MAX_TASKS = 5;
+    // Limit to 4 tasks max
+    const MAX_TASKS = 4;
     const tasksToShow = pendingTasks.slice(0, MAX_TASKS);
     const remainingTasks = pendingTasks.length - MAX_TASKS;
 
@@ -70,7 +69,7 @@ export default function Home() {
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <motion.div 
-                    className="mb-6" 
+                    className="mb-5" 
                     initial={{ opacity: 0, y: -20 }} 
                     animate={{ opacity: 1, y: 0 }}
                 >
@@ -80,262 +79,205 @@ export default function Home() {
                         <span>·</span>
                         <span>{new Date().toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}</span>
                     </div>
-                    <h1 className="text-3xl font-bold">
+                    <h1 className="text-2xl font-bold">
                         {greeting}, <span className="text-primary">{userName}</span>
                     </h1>
                 </motion.div>
 
-                {/* Stats Bar */}
+                {/* Stats Bar - More compact */}
                 <motion.div 
-                    className="flex flex-wrap gap-4 mb-6 p-4 rounded-xl bg-card border border-border"
+                    className="flex flex-wrap items-center gap-6 mb-5 p-3 rounded-xl bg-card border border-border"
                     initial={{ opacity: 0, y: 20 }} 
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                 >
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <CheckCircle2 className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{completedToday}<span className="text-muted-foreground text-lg">/{todayTasks.length}</span></p>
-                            <p className="text-xs text-muted-foreground">Tareas hoy</p>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                        <span className="text-lg font-semibold">{completedToday}/{todayTasks.length}</span>
+                        <span className="text-sm text-muted-foreground">tareas</span>
                     </div>
                     
-                    <div className="w-px bg-border" />
-                    
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                            <Target className="h-5 w-5 text-violet-500" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{activeGoals.length}</p>
-                            <p className="text-xs text-muted-foreground">Metas activas</p>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-violet-500" />
+                        <span className="text-lg font-semibold">{activeGoals.length}</span>
+                        <span className="text-sm text-muted-foreground">metas</span>
                     </div>
                     
-                    <div className="w-px bg-border" />
-                    
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                            <FolderKanban className="h-5 w-5 text-amber-500" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{spaces.length}</p>
-                            <p className="text-xs text-muted-foreground">Espacios</p>
-                        </div>
+                    <div className="flex items-center gap-2">
+                        <FolderKanban className="h-5 w-5 text-amber-500" />
+                        <span className="text-lg font-semibold">{spaces.length}</span>
+                        <span className="text-sm text-muted-foreground">espacios</span>
                     </div>
                     
                     {unprocessedCount > 0 && (
-                        <>
-                            <div className="w-px bg-border" />
-                            <Link href="/capture" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                                <div className="h-10 w-10 rounded-lg bg-rose-500/10 flex items-center justify-center relative">
-                                    <Inbox className="h-5 w-5 text-rose-500" />
-                                    <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-rose-500 text-white text-xs flex items-center justify-center font-medium">
-                                        {unprocessedCount}
-                                    </span>
-                                </div>
-                                <div>
-                                    <p className="text-2xl font-bold">{unprocessedCount}</p>
-                                    <p className="text-xs text-muted-foreground">En inbox</p>
-                                </div>
-                            </Link>
-                        </>
+                        <Link href="/capture" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                            <Inbox className="h-5 w-5 text-rose-500" />
+                            <span className="text-lg font-semibold">{unprocessedCount}</span>
+                            <span className="text-sm text-muted-foreground">inbox</span>
+                        </Link>
                     )}
                 </motion.div>
 
-                {/* Main Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                {/* Main Grid - 3 columns */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     
-                    {/* Left Column */}
+                    {/* Column 1: Tasks */}
                     <motion.div 
-                        className="lg:col-span-3 space-y-6"
-                        initial={{ opacity: 0, x: -20 }} 
-                        animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, y: 20 }} 
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                     >
-                        {/* Today's Tasks - Compact */}
-                        <div className="rounded-xl border border-border bg-card">
-                            <div className="flex items-center justify-between p-4 border-b border-border">
-                                <h2 className="font-semibold flex items-center gap-2">
-                                    <Zap className="h-5 w-5 text-amber-500" />
+                        <div className="rounded-xl border border-border bg-card h-fit">
+                            <div className="flex items-center justify-between p-3 border-b border-border">
+                                <h2 className="font-semibold flex items-center gap-2 text-sm">
+                                    <Zap className="h-4 w-4 text-amber-500" />
                                     Foco de hoy
-                                    {pendingTasks.length > 0 && (
-                                        <span className="text-xs text-muted-foreground font-normal">
-                                            ({pendingTasks.length} pendientes)
-                                        </span>
-                                    )}
                                 </h2>
-                                <Link href="/goals" className="flex items-center gap-1 text-sm text-primary hover:underline">
-                                    <Plus className="h-4 w-4" />
-                                    Agregar
+                                <Link href="/goals" className="text-xs text-primary hover:underline">
+                                    Ver todas
                                 </Link>
                             </div>
                             
                             <div className="p-2">
                                 {pendingTasks.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-20" />
-                                        <p className="text-sm">¡Todo listo por hoy!</p>
+                                    <div className="text-center py-6 text-muted-foreground">
+                                        <CheckCircle2 className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                                        <p className="text-sm">¡Todo listo!</p>
                                     </div>
                                 ) : (
                                     <>
-                                        <AnimatePresence mode="popLayout">
-                                            {tasksToShow.map((task) => {
-                                                const space = spaces.find(s => s.id === task.space_id);
-                                                return (
-                                                    <motion.button
-                                                        key={task.id}
-                                                        layout
-                                                        initial={{ opacity: 0, y: -10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        exit={{ opacity: 0, x: 50 }}
-                                                        onClick={() => handleToggleTask(task.id)}
-                                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-all text-left group"
-                                                    >
-                                                        <Circle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium truncate">{task.title}</p>
-                                                            {space && (
-                                                                <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                                                    <span>{space.icon}</span>
-                                                                    {space.name}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                        {task.priority === 'high' && (
-                                                            <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0" />
-                                                        )}
-                                                    </motion.button>
-                                                );
-                                            })}
-                                        </AnimatePresence>
+                                        {tasksToShow.map((task) => {
+                                            const space = spaces.find(s => s.id === task.space_id);
+                                            return (
+                                                <button
+                                                    key={task.id}
+                                                    onClick={() => handleToggleTask(task.id)}
+                                                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-accent transition-all text-left group"
+                                                >
+                                                    <Circle className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                                                    <span className="text-sm truncate flex-1">{task.title}</span>
+                                                    {task.priority === 'high' && (
+                                                        <AlertCircle className="h-3.5 w-3.5 text-rose-500 flex-shrink-0" />
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
                                         
                                         {remainingTasks > 0 && (
                                             <Link 
                                                 href="/goals"
-                                                className="flex items-center justify-center gap-2 p-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                                                className="flex items-center justify-center gap-1 p-2 text-xs text-muted-foreground hover:text-primary"
                                             >
-                                                +{remainingTasks} tareas más
-                                                <ChevronRight className="h-4 w-4" />
+                                                +{remainingTasks} más <ChevronRight className="h-3 w-3" />
                                             </Link>
                                         )}
                                     </>
                                 )}
                             </div>
                         </div>
+                    </motion.div>
 
-                        {/* Spaces Grid */}
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <h2 className="font-semibold flex items-center gap-2">
-                                    <FolderKanban className="h-5 w-5" />
-                                    Espacios
-                                </h2>
-                                <Link href="/spaces" className="text-sm text-primary hover:underline">
-                                    Ver todos
-                                </Link>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                {recentSpaces.map((space, index) => (
-                                    <motion.div
-                                        key={space.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.3 + index * 0.05 }}
+                    {/* Column 2: Spaces */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }} 
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <h2 className="font-semibold flex items-center gap-2 text-sm">
+                                <FolderKanban className="h-4 w-4" />
+                                Espacios
+                            </h2>
+                            <Link href="/spaces" className="text-xs text-primary hover:underline">
+                                Ver todos
+                            </Link>
+                        </div>
+                        
+                        <div className="space-y-2">
+                            {recentSpaces.map((space, index) => (
+                                <motion.div
+                                    key={space.id}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.3 + index * 0.03 }}
+                                >
+                                    <Link
+                                        href={`/spaces/${space.id}`}
+                                        className="flex items-center gap-3 p-3 rounded-xl border border-border bg-card hover:border-primary/30 transition-all group"
                                     >
-                                        <Link
-                                            href={`/spaces/${space.id}`}
-                                            className="block p-4 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all group"
+                                        <div 
+                                            className="h-9 w-9 rounded-lg flex items-center justify-center text-lg"
+                                            style={{ backgroundColor: `${space.color}15` }}
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <div 
-                                                    className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
-                                                    style={{ backgroundColor: `${space.color}15` }}
-                                                >
-                                                    {space.icon}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                                                        {space.name}
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground truncate">
-                                                        {space.description || "Sin descripción"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </motion.div>
-                                ))}
-                            </div>
+                                            {space.icon}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                                                {space.name}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground truncate">
+                                                {space.description || "Sin descripción"}
+                                            </p>
+                                        </div>
+                                    </Link>
+                                </motion.div>
+                            ))}
                         </div>
                     </motion.div>
 
-                    {/* Right Column */}
+                    {/* Column 3: Goals + Quick Actions */}
                     <motion.div 
-                        className="lg:col-span-2 space-y-6"
-                        initial={{ opacity: 0, x: 20 }} 
-                        animate={{ opacity: 1, x: 0 }}
+                        className="space-y-5"
+                        initial={{ opacity: 0, y: 20 }} 
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
                     >
-                        {/* Active Goals */}
+                        {/* Goals */}
                         <div className="rounded-xl border border-border bg-card">
-                            <div className="flex items-center justify-between p-4 border-b border-border">
-                                <h2 className="font-semibold flex items-center gap-2">
-                                    <Target className="h-5 w-5 text-violet-500" />
-                                    Metas activas
+                            <div className="flex items-center justify-between p-3 border-b border-border">
+                                <h2 className="font-semibold flex items-center gap-2 text-sm">
+                                    <Target className="h-4 w-4 text-violet-500" />
+                                    Metas
                                 </h2>
-                                <Link href="/goals" className="text-sm text-primary hover:underline">
+                                <Link href="/goals" className="text-xs text-primary hover:underline">
                                     Ver todas
                                 </Link>
                             </div>
                             
-                            <div className="p-4 space-y-3">
+                            <div className="p-3 space-y-2">
                                 {activeGoals.length === 0 ? (
-                                    <div className="text-center py-6 text-muted-foreground">
-                                        <Target className="h-8 w-8 mx-auto mb-2 opacity-20" />
+                                    <div className="text-center py-4 text-muted-foreground">
                                         <p className="text-sm">No hay metas activas</p>
-                                        <Link href="/goals" className="text-primary text-sm hover:underline">
-                                            Crear una meta
-                                        </Link>
                                     </div>
                                 ) : (
-                                    activeGoals.slice(0, 4).map((goal, index) => {
+                                    activeGoals.slice(0, 3).map((goal) => {
                                         const space = spaces.find(s => s.id === goal.space_id);
                                         const progress = goal.progress || 0;
                                         return (
-                                            <motion.div
+                                            <Link 
                                                 key={goal.id}
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: 0.4 + index * 0.05 }}
+                                                href="/goals"
+                                                className="block p-2 rounded-lg hover:bg-accent transition-all"
                                             >
-                                                <Link 
-                                                    href="/goals"
-                                                    className="block p-3 rounded-lg border border-border hover:border-primary/20 transition-all"
-                                                >
-                                                    <div className="flex items-center justify-between mb-2">
-                                                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                            <span className="text-lg">{space?.icon || "🎯"}</span>
-                                                            <p className="font-medium text-sm truncate">{goal.title}</p>
-                                                        </div>
-                                                        <span className="text-sm font-semibold ml-2" style={{ color: goal.color || "#8B5CF6" }}>
-                                                            {progress}%
-                                                        </span>
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                        <span className="text-sm">{space?.icon || "🎯"}</span>
+                                                        <p className="text-sm truncate">{goal.title}</p>
                                                     </div>
-                                                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                                                        <motion.div
-                                                            className="h-full rounded-full"
-                                                            style={{ backgroundColor: goal.color || "#8B5CF6" }}
-                                                            initial={{ width: 0 }}
-                                                            animate={{ width: `${progress}%` }}
-                                                            transition={{ duration: 0.8, delay: 0.5 + index * 0.1 }}
-                                                        />
-                                                    </div>
-                                                </Link>
-                                            </motion.div>
+                                                    <span className="text-xs font-medium" style={{ color: goal.color || "#8B5CF6" }}>
+                                                        {progress}%
+                                                    </span>
+                                                </div>
+                                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                    <div
+                                                        className="h-full rounded-full transition-all"
+                                                        style={{ 
+                                                            backgroundColor: goal.color || "#8B5CF6",
+                                                            width: `${progress}%`
+                                                        }}
+                                                    />
+                                                </div>
+                                            </Link>
                                         );
                                     })
                                 )}
@@ -343,38 +285,35 @@ export default function Home() {
                         </div>
 
                         {/* Quick Actions */}
-                        <div className="rounded-xl border border-border bg-card p-4">
-                            <h3 className="font-semibold mb-3 text-sm">Acciones rápidas</h3>
-                            <div className="grid grid-cols-2 gap-2">
-                                <Link
-                                    href="/capture"
-                                    className="flex items-center gap-2 p-3 rounded-lg border border-border hover:bg-accent transition-all text-sm"
-                                >
-                                    <Inbox className="h-4 w-4 text-primary" />
-                                    Capturar idea
-                                </Link>
-                                <Link
-                                    href="/calendar"
-                                    className="flex items-center gap-2 p-3 rounded-lg border border-border hover:bg-accent transition-all text-sm"
-                                >
-                                    <Calendar className="h-4 w-4 text-primary" />
-                                    Ver calendario
-                                </Link>
-                                <Link
-                                    href="/focus"
-                                    className="flex items-center gap-2 p-3 rounded-lg border border-border hover:bg-accent transition-all text-sm"
-                                >
-                                    <Zap className="h-4 w-4 text-amber-500" />
-                                    Modo focus
-                                </Link>
-                                <Link
-                                    href="/goals"
-                                    className="flex items-center gap-2 p-3 rounded-lg border border-border hover:bg-accent transition-all text-sm"
-                                >
-                                    <Target className="h-4 w-4 text-violet-500" />
-                                    Nueva meta
-                                </Link>
-                            </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <Link
+                                href="/capture"
+                                className="flex items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent transition-all text-sm"
+                            >
+                                <Inbox className="h-4 w-4 text-primary" />
+                                Capturar
+                            </Link>
+                            <Link
+                                href="/calendar"
+                                className="flex items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent transition-all text-sm"
+                            >
+                                <Calendar className="h-4 w-4 text-primary" />
+                                Calendario
+                            </Link>
+                            <Link
+                                href="/focus"
+                                className="flex items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent transition-all text-sm"
+                            >
+                                <Zap className="h-4 w-4 text-amber-500" />
+                                Focus
+                            </Link>
+                            <Link
+                                href="/goals"
+                                className="flex items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-accent transition-all text-sm"
+                            >
+                                <Target className="h-4 w-4 text-violet-500" />
+                                Metas
+                            </Link>
                         </div>
                     </motion.div>
                 </div>
