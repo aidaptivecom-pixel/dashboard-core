@@ -13,9 +13,9 @@ import {
     Zap,
     Inbox,
     FolderKanban,
-    ArrowRight,
     Calendar,
-    AlertCircle
+    AlertCircle,
+    ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProfile } from "@/hooks/useProfile";
@@ -52,23 +52,18 @@ export default function Home() {
         await toggleTask(id);
     };
 
-    // Today's date
     const today = new Date().toISOString().split("T")[0];
-    
-    // Filter tasks for today
     const todayTasks = tasks.filter(t => !t.due_date || t.due_date === today);
     const pendingTasks = todayTasks.filter(t => !t.completed);
     const completedToday = todayTasks.filter(t => t.completed).length;
     
-    // Goals progress
-    const goalsProgress = activeGoals.length > 0 
-        ? Math.round(activeGoals.reduce((acc, g) => acc + (g.progress || 0), 0) / activeGoals.length)
-        : 0;
-
     const userName = profile?.name?.split(" ")[0] || "Usuario";
-
-    // Get top priority spaces (those with recent activity or active projects)
     const recentSpaces = spaces.slice(0, 6);
+
+    // Limit tasks to show
+    const MAX_TASKS = 5;
+    const tasksToShow = pendingTasks.slice(0, MAX_TASKS);
+    const remainingTasks = pendingTasks.length - MAX_TASKS;
 
     return (
         <MainLayout>
@@ -92,7 +87,7 @@ export default function Home() {
 
                 {/* Stats Bar */}
                 <motion.div 
-                    className="flex flex-wrap gap-4 mb-8 p-4 rounded-xl bg-card border border-border"
+                    className="flex flex-wrap gap-4 mb-6 p-4 rounded-xl bg-card border border-border"
                     initial={{ opacity: 0, y: 20 }} 
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
@@ -153,94 +148,80 @@ export default function Home() {
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                     
-                    {/* Left Column - Focus Today */}
+                    {/* Left Column */}
                     <motion.div 
                         className="lg:col-span-3 space-y-6"
                         initial={{ opacity: 0, x: -20 }} 
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.2 }}
                     >
-                        {/* Today's Tasks */}
+                        {/* Today's Tasks - Compact */}
                         <div className="rounded-xl border border-border bg-card">
                             <div className="flex items-center justify-between p-4 border-b border-border">
                                 <h2 className="font-semibold flex items-center gap-2">
                                     <Zap className="h-5 w-5 text-amber-500" />
                                     Foco de hoy
+                                    {pendingTasks.length > 0 && (
+                                        <span className="text-xs text-muted-foreground font-normal">
+                                            ({pendingTasks.length} pendientes)
+                                        </span>
+                                    )}
                                 </h2>
-                                <Link 
-                                    href="/goals" 
-                                    className="flex items-center gap-1 text-sm text-primary hover:underline"
-                                >
+                                <Link href="/goals" className="flex items-center gap-1 text-sm text-primary hover:underline">
                                     <Plus className="h-4 w-4" />
                                     Agregar
                                 </Link>
                             </div>
                             
                             <div className="p-2">
-                                {pendingTasks.length === 0 && completedToday === 0 ? (
-                                    <div className="text-center py-12 text-muted-foreground">
-                                        <Circle className="h-12 w-12 mx-auto mb-3 opacity-20" />
-                                        <p className="font-medium">No hay tareas para hoy</p>
-                                        <p className="text-sm">Agrega tareas para mantener el foco</p>
+                                {pendingTasks.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground">
+                                        <CheckCircle2 className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                                        <p className="text-sm">¡Todo listo por hoy!</p>
                                     </div>
                                 ) : (
-                                    <AnimatePresence mode="popLayout">
-                                        {/* Pending tasks first */}
-                                        {pendingTasks.map((task) => {
-                                            const space = spaces.find(s => s.id === task.space_id);
-                                            return (
-                                                <motion.button
-                                                    key={task.id}
-                                                    layout
-                                                    initial={{ opacity: 0, y: -10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, x: 50 }}
-                                                    onClick={() => handleToggleTask(task.id)}
-                                                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-all text-left group"
-                                                >
-                                                    <Circle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium truncate">{task.title}</p>
-                                                        {space && (
-                                                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                                                <span>{space.icon}</span>
-                                                                {space.name}
-                                                            </p>
+                                    <>
+                                        <AnimatePresence mode="popLayout">
+                                            {tasksToShow.map((task) => {
+                                                const space = spaces.find(s => s.id === task.space_id);
+                                                return (
+                                                    <motion.button
+                                                        key={task.id}
+                                                        layout
+                                                        initial={{ opacity: 0, y: -10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        exit={{ opacity: 0, x: 50 }}
+                                                        onClick={() => handleToggleTask(task.id)}
+                                                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-all text-left group"
+                                                    >
+                                                        <Circle className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium truncate">{task.title}</p>
+                                                            {space && (
+                                                                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                                                    <span>{space.icon}</span>
+                                                                    {space.name}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                        {task.priority === 'high' && (
+                                                            <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0" />
                                                         )}
-                                                    </div>
-                                                    {task.priority === 'high' && (
-                                                        <AlertCircle className="h-4 w-4 text-rose-500 flex-shrink-0" />
-                                                    )}
-                                                </motion.button>
-                                            );
-                                        })}
+                                                    </motion.button>
+                                                );
+                                            })}
+                                        </AnimatePresence>
                                         
-                                        {/* Completed tasks */}
-                                        {todayTasks.filter(t => t.completed).slice(0, 3).map((task) => {
-                                            const space = spaces.find(s => s.id === task.space_id);
-                                            return (
-                                                <motion.button
-                                                    key={task.id}
-                                                    layout
-                                                    initial={{ opacity: 0 }}
-                                                    animate={{ opacity: 1 }}
-                                                    onClick={() => handleToggleTask(task.id)}
-                                                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent transition-all text-left opacity-50"
-                                                >
-                                                    <CheckCircle2 className="h-5 w-5 text-emerald-500 flex-shrink-0" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm line-through text-muted-foreground truncate">{task.title}</p>
-                                                        {space && (
-                                                            <p className="text-xs text-muted-foreground flex items-center gap-1">
-                                                                <span>{space.icon}</span>
-                                                                {space.name}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </motion.button>
-                                            );
-                                        })}
-                                    </AnimatePresence>
+                                        {remainingTasks > 0 && (
+                                            <Link 
+                                                href="/goals"
+                                                className="flex items-center justify-center gap-2 p-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                                            >
+                                                +{remainingTasks} tareas más
+                                                <ChevronRight className="h-4 w-4" />
+                                            </Link>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -292,7 +273,7 @@ export default function Home() {
                         </div>
                     </motion.div>
 
-                    {/* Right Column - Goals & Calendar */}
+                    {/* Right Column */}
                     <motion.div 
                         className="lg:col-span-2 space-y-6"
                         initial={{ opacity: 0, x: 20 }} 
@@ -311,10 +292,10 @@ export default function Home() {
                                 </Link>
                             </div>
                             
-                            <div className="p-4 space-y-4">
+                            <div className="p-4 space-y-3">
                                 {activeGoals.length === 0 ? (
-                                    <div className="text-center py-8 text-muted-foreground">
-                                        <Target className="h-10 w-10 mx-auto mb-2 opacity-20" />
+                                    <div className="text-center py-6 text-muted-foreground">
+                                        <Target className="h-8 w-8 mx-auto mb-2 opacity-20" />
                                         <p className="text-sm">No hay metas activas</p>
                                         <Link href="/goals" className="text-primary text-sm hover:underline">
                                             Crear una meta
