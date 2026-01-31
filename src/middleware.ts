@@ -1,7 +1,17 @@
-import { type NextRequest } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
 export async function middleware(request: NextRequest) {
+  // Handle auth code redirect - Supabase may redirect to root with ?code=
+  const code = request.nextUrl.searchParams.get('code');
+  if (code && !request.nextUrl.pathname.startsWith('/auth/callback')) {
+    const callbackUrl = new URL('/auth/callback', request.url);
+    callbackUrl.searchParams.set('code', code);
+    const next = request.nextUrl.searchParams.get('next');
+    if (next) callbackUrl.searchParams.set('next', next);
+    return NextResponse.redirect(callbackUrl);
+  }
+
   return await updateSession(request);
 }
 
