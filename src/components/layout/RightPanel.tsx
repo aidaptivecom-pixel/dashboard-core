@@ -21,30 +21,29 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useProjectContext } from "@/hooks/useProjectContext";
+import { useTasks } from "@/hooks/useTasks";
+import { useGoals } from "@/hooks/useGoals";
+import { useSpaces } from "@/hooks/useSpaces";
 
-// Mock data for non-space pages
-const todayEvents = [
-    { id: "1", title: "Daily Standup", time: "10:00", type: "meeting", color: "#4F6BFF" },
-    { id: "2", title: "Call con cliente", time: "14:00", type: "call", color: "#10B981" },
-    { id: "3", title: "Deadline: Propuesta", time: "18:00", type: "deadline", color: "#EF4444" },
-];
-
-const quickTasks = [
-    { id: "1", title: "Revisar propuesta ABC", done: false, space: "🤖" },
-    { id: "2", title: "Llamar proveedor", done: false, space: "🌱" },
-    { id: "3", title: "Terminar hero section", done: true, space: "🚀" },
-];
-
+// Mock data for captures (TODO: connect to useCaptures)
 const recentCaptures = [
     { id: "1", content: "Idea: Integración con Notion", type: "idea", time: "10min" },
     { id: "2", content: "Screenshot diseño", type: "image", time: "1h" },
     { id: "3", content: "Nota de voz", type: "voice", time: "2h" },
 ];
 
-const goalProgress = [
-    { id: "1", title: "Lanzar Limbo MVP", progress: 45, icon: "🚀" },
-    { id: "2", title: "10 clientes Aidaptive", progress: 60, icon: "🤖" },
-];
+// Helper para obtener fecha de hoy en formato YYYY-MM-DD
+function getTodayDate(): string {
+    return new Date().toISOString().split("T")[0];
+}
+
+// Colores por prioridad de tarea
+const PRIORITY_COLORS: Record<string, string> = {
+    urgent: "#EF4444",
+    high: "#F59E0B", 
+    medium: "#3B82F6",
+    low: "#6B7280",
+};
 
 // Helper to format relative time
 function formatRelativeTime(dateString: string | null): string {
@@ -223,6 +222,11 @@ export function RightPanel() {
     const pathname = usePathname();
     const params = useParams();
 
+    // Hooks para datos reales
+    const { tasks, toggleTask } = useTasks();
+    const { activeGoals } = useGoals();
+    const { spaces } = useSpaces();
+
     // Determine which content to show based on current page
     const isHome = pathname === "/";
     const isCapture = pathname === "/capture";
@@ -233,77 +237,102 @@ export function RightPanel() {
     // Get space ID from URL params
     const spaceId = params?.id as string;
 
+    // Filtrar tareas de hoy
+    const today = getTodayDate();
+    const todayTasks = tasks.filter(t => t.due_date === today);
+    const pendingTodayTasks = todayTasks.filter(t => !t.completed);
+    
+    // Helper para obtener icono del espacio
+    const getSpaceIcon = (spaceId: string | null) => {
+        if (!spaceId) return "📋";
+        const space = spaces.find(s => s.id === spaceId);
+        return space?.icon || "📋";
+    };
+
     return (
         <aside className="w-80 2xl:w-96 h-full bg-background flex flex-col overflow-hidden">
             <div className="flex-1 flex flex-col gap-4 p-4 overflow-y-auto custom-scrollbar">
                 
-                {/* HOME: Today's events + Quick tasks */}
+                {/* HOME: Today's tasks + Goals */}
                 {isHome && (
                     <>
-                        {/* Today's Schedule */}
+                        {/* Today's Tasks */}
                         <div className="rounded-2xl border border-border p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="font-semibold flex items-center gap-2">
                                     <Calendar className="h-4 w-4 text-primary" />
                                     Hoy
                                 </h3>
-                                <Link href="/calendar" className="text-xs text-primary hover:underline">
+                                <Link href="/goals" className="text-xs text-primary hover:underline">
                                     Ver todo
                                 </Link>
                             </div>
                             <div className="space-y-2">
-                                {todayEvents.map((event) => (
-                                    <div
-                                        key={event.id}
-                                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors"
-                                    >
-                                        <div 
-                                            className="w-1 h-8 rounded-full"
-                                            style={{ backgroundColor: event.color }}
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-medium truncate">{event.title}</p>
-                                            <p className="text-xs text-muted-foreground">{event.time}</p>
-                                        </div>
-                                    </div>
-                                ))}
+                                {todayTasks.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                        Sin tareas para hoy
+                                    </p>
+                                ) : (
+                                    todayTasks.slice(0, 5).map((task) => (
+                                        <button
+                                            key={task.id}
+                                            onClick={() => toggleTask(task.id)}
+                                            className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors text-left"
+                                        >
+                                            <div 
+                                                className="w-1 h-8 rounded-full"
+                                                style={{ backgroundColor: PRIORITY_COLORS[task.priority || 'medium'] }}
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <p className={cn(
+                                                    "text-sm font-medium truncate",
+                                                    task.completed && "line-through opacity-50"
+                                                )}>{task.title}</p>
+                                                <p className="text-xs text-muted-foreground">
+                                                    {task.due_time || "Sin hora"} · {getSpaceIcon(task.space_id)}
+                                                </p>
+                                            </div>
+                                            {task.completed ? (
+                                                <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+                                            ) : (
+                                                <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                            )}
+                                        </button>
+                                    ))
+                                )}
                             </div>
                         </div>
 
-                        {/* Quick Tasks */}
+                        {/* Pending Tasks (Quick Tasks) */}
                         <div className="rounded-2xl border border-border p-4">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="font-semibold flex items-center gap-2">
                                     <Zap className="h-4 w-4 text-yellow-500" />
-                                    Tareas rápidas
+                                    Pendientes
                                 </h3>
-                                <button className="p-1 rounded-lg hover:bg-accent">
-                                    <Plus className="h-4 w-4" />
-                                </button>
+                                <span className="text-xs text-muted-foreground">
+                                    {pendingTodayTasks.length} de {todayTasks.length}
+                                </span>
                             </div>
                             <div className="space-y-1">
-                                {quickTasks.map((task) => (
-                                    <div
-                                        key={task.id}
-                                        className={cn(
-                                            "flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors",
-                                            task.done && "opacity-50"
-                                        )}
-                                    >
-                                        {task.done ? (
-                                            <CheckCircle2 className="h-4 w-4 text-mint flex-shrink-0" />
-                                        ) : (
-                                            <Circle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                        )}
-                                        <span className={cn(
-                                            "text-sm flex-1 truncate",
-                                            task.done && "line-through"
-                                        )}>
-                                            {task.title}
-                                        </span>
-                                        <span className="text-xs">{task.space}</span>
+                                {pendingTodayTasks.length === 0 ? (
+                                    <div className="text-center py-4">
+                                        <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
+                                        <p className="text-sm text-muted-foreground">¡Todo listo!</p>
                                     </div>
-                                ))}
+                                ) : (
+                                    pendingTodayTasks.slice(0, 4).map((task) => (
+                                        <button
+                                            key={task.id}
+                                            onClick={() => toggleTask(task.id)}
+                                            className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors text-left group"
+                                        >
+                                            <Circle className="h-4 w-4 text-muted-foreground group-hover:text-primary flex-shrink-0" />
+                                            <span className="text-sm flex-1 truncate">{task.title}</span>
+                                            <span className="text-xs">{getSpaceIcon(task.space_id)}</span>
+                                        </button>
+                                    ))
+                                )}
                             </div>
                         </div>
 
@@ -319,22 +348,32 @@ export function RightPanel() {
                                 </Link>
                             </div>
                             <div className="space-y-3">
-                                {goalProgress.map((goal) => (
-                                    <div key={goal.id}>
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <span className="text-sm">{goal.icon}</span>
-                                            <span className="text-sm truncate flex-1">{goal.title}</span>
-                                            <span className="text-xs font-medium">{goal.progress}%</span>
-                                        </div>
-                                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                                            <motion.div
-                                                className="h-full bg-primary rounded-full"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${goal.progress}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
+                                {activeGoals.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                        Sin objetivos activos
+                                    </p>
+                                ) : (
+                                    activeGoals.slice(0, 3).map((goal) => {
+                                        const space = spaces.find(s => s.id === goal.space_id);
+                                        return (
+                                            <div key={goal.id}>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <span className="text-sm">{space?.icon || "🎯"}</span>
+                                                    <span className="text-sm truncate flex-1">{goal.title}</span>
+                                                    <span className="text-xs font-medium">{goal.progress || 0}%</span>
+                                                </div>
+                                                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                                                    <motion.div
+                                                        className="h-full rounded-full"
+                                                        style={{ backgroundColor: goal.color || "#8B5CF6" }}
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${goal.progress || 0}%` }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
                     </>
@@ -386,38 +425,47 @@ export function RightPanel() {
                     </>
                 )}
 
-                {/* CALENDAR: Mini calendar + upcoming */}
+                {/* CALENDAR: Upcoming tasks */}
                 {isCalendar && (
                     <>
                         <div className="rounded-2xl border border-border p-4">
                             <h3 className="font-semibold flex items-center gap-2 mb-3">
                                 <Clock className="h-4 w-4 text-primary" />
-                                Próximas horas
+                                Tareas de hoy
                             </h3>
                             <div className="space-y-2">
-                                {todayEvents.map((event) => (
-                                    <div
-                                        key={event.id}
-                                        className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors"
-                                    >
-                                        <span className="font-mono text-sm text-muted-foreground w-12">
-                                            {event.time}
-                                        </span>
-                                        <div 
-                                            className="w-1 h-8 rounded-full"
-                                            style={{ backgroundColor: event.color }}
-                                        />
-                                        <span className="text-sm truncate">{event.title}</span>
-                                    </div>
-                                ))}
+                                {todayTasks.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                        Sin tareas para hoy
+                                    </p>
+                                ) : (
+                                    todayTasks.map((task) => (
+                                        <div
+                                            key={task.id}
+                                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-accent transition-colors"
+                                        >
+                                            <span className="font-mono text-sm text-muted-foreground w-12">
+                                                {task.due_time || "--:--"}
+                                            </span>
+                                            <div 
+                                                className="w-1 h-8 rounded-full"
+                                                style={{ backgroundColor: PRIORITY_COLORS[task.priority || 'medium'] }}
+                                            />
+                                            <span className={cn(
+                                                "text-sm truncate",
+                                                task.completed && "line-through opacity-50"
+                                            )}>{task.title}</span>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
 
                         <div className="rounded-2xl border border-border p-4">
-                            <h3 className="font-semibold mb-3">Agregar evento</h3>
+                            <h3 className="font-semibold mb-3">Agregar tarea</h3>
                             <button className="w-full btn-secondary py-2.5 flex items-center justify-center gap-2">
                                 <Plus className="h-4 w-4" />
-                                Nuevo evento
+                                Nueva tarea
                             </button>
                         </div>
                     </>
