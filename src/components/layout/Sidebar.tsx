@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSpaces } from "@/hooks/useSpaces";
+import { useSpacesHealth } from "@/hooks/useSpacesHealth";
 import { useCaptures } from "@/hooks/useCaptures";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
@@ -72,6 +73,7 @@ export function Sidebar() {
     const pathname = usePathname();
     
     const { spaces, loading: spacesLoading, createSpace } = useSpaces();
+    const { getHealth } = useSpacesHealth();
     const { unprocessedCount } = useCaptures();
     const { profile } = useProfile();
     const { signOut } = useAuth();
@@ -218,7 +220,8 @@ export function Sidebar() {
                                                         <span className="flex-1 truncate text-sm">{space.name}</span>
                                                         <div 
                                                             className="w-2 h-2 rounded-full" 
-                                                            style={{ backgroundColor: space.color || "#3B82F6" }} 
+                                                            style={{ backgroundColor: getHealth(space.id).color }} 
+                                                            title={`${getHealth(space.id).projectStatus || 'Sin contexto'} - ${getHealth(space.id).daysInactive}d inactivo`}
                                                         />
                                                     </Link>
                                                 </li>
