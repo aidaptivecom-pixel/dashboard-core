@@ -2,16 +2,18 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Loader2, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Mail, Loader2, Sparkles, ArrowRight, CheckCircle2, Lock } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signInWithEmail, signInWithGoogle } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const { signInWithEmail, signInWithPassword, signInWithGoogle } = useAuth();
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,14 +22,23 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
 
-    const { error } = await signInWithEmail(email);
-
-    if (error) {
-      setError(error.message);
+    if (showPassword && password) {
+      // Login with password
+      const { error } = await signInWithPassword(email, password);
+      if (error) {
+        setError(error.message);
+      }
       setIsLoading(false);
     } else {
-      setEmailSent(true);
-      setIsLoading(false);
+      // Magic link
+      const { error } = await signInWithEmail(email);
+      if (error) {
+        setError(error.message);
+        setIsLoading(false);
+      } else {
+        setEmailSent(true);
+        setIsLoading(false);
+      }
     }
   };
 
@@ -126,23 +137,44 @@ export default function LoginPage() {
                   />
                 </div>
 
+                {showPassword && (
+                  <div className="relative mt-3">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Contraseña"
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
+                )}
+
                 {error && (
                   <p className="mt-2 text-sm text-coral">{error}</p>
                 )}
 
                 <button
                   type="submit"
-                  disabled={isLoading || !email.trim()}
+                  disabled={isLoading || !email.trim() || (showPassword && !password)}
                   className="w-full mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      Enviar link mágico
+                      {showPassword ? 'Iniciar sesión' : 'Enviar link mágico'}
                       <ArrowRight className="h-4 w-4" />
                     </>
                   )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="w-full mt-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showPassword ? 'Usar link mágico' : '¿Tenés contraseña?'}
                 </button>
               </form>
             </>
