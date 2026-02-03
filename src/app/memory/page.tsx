@@ -118,7 +118,7 @@ export default function MemoryPage() {
 
                 // Extract unique projects
                 const projectList = data?.map(m => m.project).filter((p): p is string => p !== null && p !== undefined) || [];
-                const uniqueProjects = [...new Set(projectList)];
+                const uniqueProjects = Array.from(new Set(projectList));
                 setProjects(uniqueProjects);
 
                 // Calculate stats
