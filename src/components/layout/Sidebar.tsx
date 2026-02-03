@@ -68,6 +68,7 @@ const iconOptions = ["📁", "💼", "🚀", "🎯", "💡", "🏠", "🎨", "�
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const [spacesOpen, setSpacesOpen] = useState(true);
+    const [aidaptiveCoreOpen, setAidaptiveCoreOpen] = useState(false);
     const [showNewSpaceModal, setShowNewSpaceModal] = useState(false);
     const [newSpaceName, setNewSpaceName] = useState("");
     const [newSpaceIcon, setNewSpaceIcon] = useState("📁");
@@ -79,6 +80,10 @@ export function Sidebar() {
     const { unprocessedCount } = useCaptures();
     const { profile } = useProfile();
     const { signOut } = useAuth();
+
+    // Separar espacios de Aidaptive Core del resto
+    const aidaptiveSpaces = spaces.filter(s => s.name.startsWith('Aidaptive'));
+    const otherSpaces = spaces.filter(s => !s.name.startsWith('Aidaptive'));
 
     const handleCreateSpace = async () => {
         if (!newSpaceName.trim()) return;
@@ -206,29 +211,90 @@ export function Sidebar() {
                                     ) : spaces.length === 0 ? (
                                         <li className="px-3 py-2 text-sm text-muted-foreground">Sin espacios</li>
                                     ) : (
-                                        spaces.map((space) => {
-                                            const isActive = pathname === `/spaces/${space.id}`;
-                                            return (
-                                                <li key={space.id}>
-                                                    <Link 
-                                                        href={`/spaces/${space.id}`} 
+                                        <>
+                                            {/* Aidaptive Core Group */}
+                                            {aidaptiveSpaces.length > 0 && (
+                                                <li>
+                                                    <button
+                                                        onClick={() => setAidaptiveCoreOpen(!aidaptiveCoreOpen)}
                                                         className={cn(
-                                                            "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
-                                                            "hover:bg-accent",
-                                                            isActive ? "bg-accent" : "text-muted-foreground hover:text-foreground"
+                                                            "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
+                                                            "hover:bg-accent text-muted-foreground hover:text-foreground",
+                                                            aidaptiveCoreOpen && "bg-accent/50"
                                                         )}
                                                     >
-                                                        <span className="text-base">{space.icon}</span>
-                                                        <span className="flex-1 truncate text-sm">{space.name}</span>
-                                                        <div 
-                                                            className="w-2 h-2 rounded-full" 
-                                                            style={{ backgroundColor: getHealth(space.id).color }} 
-                                                            title={`${getHealth(space.id).projectStatus || 'Sin contexto'} - ${getHealth(space.id).daysInactive}d inactivo`}
-                                                        />
-                                                    </Link>
+                                                        <span className="text-base">⚡</span>
+                                                        <span className="flex-1 text-left text-sm font-medium">Aidaptive Core</span>
+                                                        <ChevronDown className={cn(
+                                                            "h-3 w-3 transition-transform",
+                                                            !aidaptiveCoreOpen && "-rotate-90"
+                                                        )} />
+                                                    </button>
+                                                    
+                                                    <AnimatePresence>
+                                                        {aidaptiveCoreOpen && (
+                                                            <motion.ul
+                                                                initial={{ opacity: 0, height: 0 }}
+                                                                animate={{ opacity: 1, height: "auto" }}
+                                                                exit={{ opacity: 0, height: 0 }}
+                                                                className="ml-4 mt-1 space-y-1 border-l border-border pl-2"
+                                                            >
+                                                                {aidaptiveSpaces.map((space) => {
+                                                                    const isActive = pathname === `/spaces/${space.id}`;
+                                                                    // Mostrar nombre corto sin "Aidaptive "
+                                                                    const shortName = space.name.replace('Aidaptive ', '');
+                                                                    return (
+                                                                        <li key={space.id}>
+                                                                            <Link 
+                                                                                href={`/spaces/${space.id}`} 
+                                                                                className={cn(
+                                                                                    "flex items-center gap-3 px-3 py-1.5 rounded-lg transition-all",
+                                                                                    "hover:bg-accent",
+                                                                                    isActive ? "bg-accent" : "text-muted-foreground hover:text-foreground"
+                                                                                )}
+                                                                            >
+                                                                                <span className="text-sm">{space.icon || '📁'}</span>
+                                                                                <span className="flex-1 truncate text-sm">{shortName}</span>
+                                                                                <div 
+                                                                                    className="w-2 h-2 rounded-full" 
+                                                                                    style={{ backgroundColor: getHealth(space.id).color }} 
+                                                                                    title={`${getHealth(space.id).projectStatus || 'Sin contexto'} - ${getHealth(space.id).daysInactive}d inactivo`}
+                                                                                />
+                                                                            </Link>
+                                                                        </li>
+                                                                    );
+                                                                })}
+                                                            </motion.ul>
+                                                        )}
+                                                    </AnimatePresence>
                                                 </li>
-                                            );
-                                        })
+                                            )}
+
+                                            {/* Other Spaces */}
+                                            {otherSpaces.map((space) => {
+                                                const isActive = pathname === `/spaces/${space.id}`;
+                                                return (
+                                                    <li key={space.id}>
+                                                        <Link 
+                                                            href={`/spaces/${space.id}`} 
+                                                            className={cn(
+                                                                "flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
+                                                                "hover:bg-accent",
+                                                                isActive ? "bg-accent" : "text-muted-foreground hover:text-foreground"
+                                                            )}
+                                                        >
+                                                            <span className="text-base">{space.icon}</span>
+                                                            <span className="flex-1 truncate text-sm">{space.name}</span>
+                                                            <div 
+                                                                className="w-2 h-2 rounded-full" 
+                                                                style={{ backgroundColor: getHealth(space.id).color }} 
+                                                                title={`${getHealth(space.id).projectStatus || 'Sin contexto'} - ${getHealth(space.id).daysInactive}d inactivo`}
+                                                            />
+                                                        </Link>
+                                                    </li>
+                                                );
+                                            })}
+                                        </>
                                     )}
                                     
                                     <li>
@@ -250,7 +316,18 @@ export function Sidebar() {
                 {collapsed && (
                     <div className="flex-1 px-3 py-2 overflow-y-auto">
                         <div className="space-y-2">
-                            {spaces.map((space) => (
+                            {/* Aidaptive Core icon */}
+                            {aidaptiveSpaces.length > 0 && (
+                                <div 
+                                    className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mx-auto cursor-pointer hover:bg-primary/20 transition-all"
+                                    title="Aidaptive Core"
+                                    onClick={() => setAidaptiveCoreOpen(!aidaptiveCoreOpen)}
+                                >
+                                    <span className="text-base">⚡</span>
+                                </div>
+                            )}
+                            {/* Other spaces */}
+                            {otherSpaces.map((space) => (
                                 <Link 
                                     key={space.id} 
                                     href={`/spaces/${space.id}`} 
