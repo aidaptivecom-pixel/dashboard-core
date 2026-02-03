@@ -371,7 +371,7 @@ export default function SpacePage() {
                 </div>
 
                 {/* Unified Workspace Container */}
-                <div className="rounded-2xl border border-border bg-background overflow-hidden flex-1 flex flex-col">
+                <div className="rounded-2xl border border-border bg-background overflow-hidden flex-1 flex flex-col min-h-0">
                     {/* Stats Row - Clickable filters */}
                     <div className="flex items-center divide-x divide-border border-b border-border">
                         <button 
@@ -448,7 +448,7 @@ export default function SpacePage() {
 
                     {/* FILES TAB - Finder Layout */}
                     {activeTab === "files" && (
-                        <div className="flex flex-1 border-t border-border">
+                        <div className="flex flex-1 min-h-0 border-t border-border">
                             {/* Left Panel - Folder Tree */}
                             <div className="w-56 flex-shrink-0 border-r border-border hidden md:flex md:flex-col">
                                 <div className="p-3 border-b border-border bg-muted/30">
