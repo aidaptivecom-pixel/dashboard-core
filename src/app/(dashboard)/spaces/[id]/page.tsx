@@ -447,11 +447,11 @@ export default function SpacePage() {
                     </div>
                 </div>
 
-                {/* FILES TAB - Finder Layout */}
+                {/* FILES TAB - Unified Finder Layout */}
                 {activeTab === "files" && (
-                    <div className="flex gap-4 min-h-[400px]">
+                    <div className="rounded-2xl border border-border bg-background overflow-hidden min-h-[400px] flex">
                         {/* Left Panel - Folder Tree */}
-                        <div className="w-56 flex-shrink-0 rounded-2xl border border-border bg-background overflow-hidden hidden md:flex md:flex-col">
+                        <div className="w-56 flex-shrink-0 border-r border-border hidden md:flex md:flex-col">
                             <div className="p-3 border-b border-border bg-muted/30">
                                 <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                     <Folder className="h-4 w-4" />
@@ -481,7 +481,7 @@ export default function SpacePage() {
                         </div>
 
                         {/* Right Panel - Content */}
-                        <div className="flex-1 rounded-2xl border border-border bg-background overflow-hidden flex flex-col">
+                        <div className="flex-1 flex flex-col">
                             {/* Content Header */}
                             <div className="p-3 border-b border-border bg-muted/30 flex items-center gap-3">
                                 <div className="flex items-center gap-2 text-sm">
