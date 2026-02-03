@@ -26,8 +26,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                         <Header />
                         
                         {/* Page content */}
-                        <main className="flex-1 overflow-y-auto custom-scrollbar">
-                            <div className="p-3 sm:p-6 lg:p-8 pb-20 md:pb-8">
+                        <main className="flex-1 overflow-y-auto custom-scrollbar flex flex-col">
+                            <div className="p-3 sm:p-6 lg:p-8 pb-20 md:pb-8 flex-1 flex flex-col">
                                 {children}
                             </div>
                         </main>
