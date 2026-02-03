@@ -148,11 +148,32 @@ export default function SpacePage() {
     const [showNewTaskModal, setShowNewTaskModal] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newTaskPriority, setNewTaskPriority] = useState<"low" | "medium" | "high">("medium");
+    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
     const { goals } = useGoals(spaceId);
     const { tasks, createTask, updateTask } = useTasks(spaceId);
-    const { folders, createFolder } = useFolders(spaceId, currentFolderId);
+    const { folders: currentFolders, createFolder } = useFolders(spaceId, currentFolderId);
+    const { folders: allFolders } = useFolders(spaceId, null); // Get all folders for tree
     const { files, uploading, uploadFile, toggleStar } = useFiles(spaceId, currentFolderId);
+
+    // Toggle folder expansion in tree
+    const toggleFolderExpand = (folderId: string) => {
+        setExpandedFolders(prev => {
+            const next = new Set(prev);
+            if (next.has(folderId)) {
+                next.delete(folderId);
+            } else {
+                next.add(folderId);
+            }
+            return next;
+        });
+    };
+
+    // Get root folders (no parent)
+    const rootFolders = allFolders.filter(f => !f.parent_id);
+    
+    // Get children of a folder
+    const getChildFolders = (parentId: string) => allFolders.filter(f => f.parent_id === parentId);
 
     useEffect(() => {
         const fetchSpaceData = async () => {
@@ -272,7 +293,7 @@ export default function SpacePage() {
         );
     }
 
-    const filteredFolders = folders.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredFolders = currentFolders.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const filteredNotes = notes.filter(n => n.title.toLowerCase().includes(searchQuery.toLowerCase()));
     const filteredFiles = files.filter(f => f.name.toLowerCase().includes(searchQuery.toLowerCase()));
     const filteredTasks = tasks.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -471,7 +492,7 @@ export default function SpacePage() {
                                 </button>
                                 
                                 {/* Folder list */}
-                                {folders.map((folder) => (
+                                {currentFolders.map((folder) => (
                                     <button 
                                         key={folder.id}
                                         onClick={() => navigateToFolder(folder.id, { id: folder.id, name: folder.name, icon: folder.icon, parent_id: folder.parent_id, system_view: (folder as any).system_view || null })} 
