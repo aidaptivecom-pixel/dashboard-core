@@ -369,45 +369,81 @@ export default function SpacePage() {
                     </div>
                 </div>
 
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                    <button onClick={() => setActiveTab("goals")} className={cn("p-4 rounded-xl border border-border bg-background transition-all", activeTab === "goals" && "ring-2 ring-primary")}>
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                {/* Unified Control Bar */}
+                <div className="rounded-2xl border border-border bg-background mb-6 overflow-hidden">
+                    {/* Stats Row - Clickable filters */}
+                    <div className="flex items-center divide-x divide-border border-b border-border">
+                        <button 
+                            onClick={() => setActiveTab("goals")} 
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all hover:bg-accent",
+                                activeTab === "goals" && "bg-primary/10 text-primary"
+                            )}
+                        >
                             <Target className="h-4 w-4" />
-                            <span className="text-sm">Metas</span>
-                        </div>
-                        <p className="text-2xl font-bold">{goals.filter(g => g.status === 'active').length}</p>
-                    </button>
-                    <button onClick={() => setActiveTab("tasks")} className={cn("p-4 rounded-xl border border-border bg-background transition-all", activeTab === "tasks" && "ring-2 ring-primary")}>
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                            <span className="font-medium">{goals.filter(g => g.status === 'active').length}</span>
+                            <span className="text-sm text-muted-foreground hidden sm:inline">Metas</span>
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab("tasks")} 
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all hover:bg-accent",
+                                activeTab === "tasks" && "bg-primary/10 text-primary"
+                            )}
+                        >
                             <CheckSquare className="h-4 w-4" />
-                            <span className="text-sm">Tareas</span>
-                        </div>
-                        <p className="text-2xl font-bold">{tasks.filter(t => !t.completed).length}</p>
-                    </button>
-                    <button onClick={() => setActiveTab("files")} className={cn("p-4 rounded-xl border border-border bg-background transition-all", activeTab === "files" && "ring-2 ring-primary")}>
-                        <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                            <span className="font-medium">{tasks.filter(t => !t.completed).length}</span>
+                            <span className="text-sm text-muted-foreground hidden sm:inline">Tareas</span>
+                        </button>
+                        <button 
+                            onClick={() => setActiveTab("files")} 
+                            className={cn(
+                                "flex-1 flex items-center justify-center gap-2 py-3 px-4 transition-all hover:bg-accent",
+                                activeTab === "files" && "bg-primary/10 text-primary"
+                            )}
+                        >
                             <StickyNote className="h-4 w-4" />
-                            <span className="text-sm">Notas</span>
+                            <span className="font-medium">{notes.length}</span>
+                            <span className="text-sm text-muted-foreground hidden sm:inline">Notas</span>
+                        </button>
+                    </div>
+                    
+                    {/* Actions Row */}
+                    <div className="flex items-center justify-between px-3 py-2 gap-2 flex-wrap">
+                        <div className="flex items-center gap-1">
+                            <button 
+                                onClick={() => setShowNewFolderModal(true)} 
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                            >
+                                <FolderPlus className="h-4 w-4" />
+                                <span className="hidden sm:inline">Carpeta</span>
+                            </button>
+                            <button 
+                                onClick={handleNewNote} 
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+                            >
+                                <StickyNote className="h-4 w-4" />
+                                <span className="hidden sm:inline">Nota</span>
+                            </button>
+                            <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all cursor-pointer">
+                                <Upload className="h-4 w-4" />
+                                <span className="hidden sm:inline">{uploading ? "..." : "Archivo"}</span>
+                                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                            </label>
                         </div>
-                        <p className="text-2xl font-bold">{notes.length}</p>
-                    </button>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex gap-1 p-1 rounded-xl bg-muted mb-6">
-                    <button onClick={() => setActiveTab("files")} className={cn("flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors", activeTab === "files" ? "bg-background shadow-sm" : "hover:bg-background/50")}>
-                        <Folder className="h-4 w-4 inline mr-2" />
-                        Archivos
-                    </button>
-                    <button onClick={() => setActiveTab("tasks")} className={cn("flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors", activeTab === "tasks" ? "bg-background shadow-sm" : "hover:bg-background/50")}>
-                        <CheckSquare className="h-4 w-4 inline mr-2" />
-                        Tareas ({pendingTasks.length})
-                    </button>
-                    <button onClick={() => setActiveTab("goals")} className={cn("flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors", activeTab === "goals" ? "bg-background shadow-sm" : "hover:bg-background/50")}>
-                        <Target className="h-4 w-4 inline mr-2" />
-                        Metas
-                    </button>
+                        
+                        {/* Breadcrumb / Home button */}
+                        <button 
+                            onClick={() => navigateToFolder(null)} 
+                            className={cn(
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all",
+                                currentFolderId ? "text-muted-foreground hover:text-foreground hover:bg-accent" : "text-primary bg-primary/10"
+                            )}
+                        >
+                            <Home className="h-4 w-4" />
+                            <span className="hidden sm:inline">{space.name}</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Search */}
@@ -462,23 +498,6 @@ export default function SpacePage() {
                                     </button>
                                 </div>
                             ))}
-                        </div>
-
-                        {/* Quick Actions */}
-                        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                            <button onClick={() => setShowNewFolderModal(true)} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-border hover:bg-accent transition-colors text-sm whitespace-nowrap">
-                                <FolderPlus className="h-4 w-4" />
-                                Nueva carpeta
-                            </button>
-                            <button onClick={handleNewNote} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-border hover:bg-accent hover:border-green-500/30 transition-colors text-sm whitespace-nowrap">
-                                <StickyNote className="h-4 w-4" />
-                                Nueva nota
-                            </button>
-                            <label className="flex items-center gap-2 px-4 py-2 rounded-xl border border-dashed border-border hover:bg-accent transition-colors text-sm whitespace-nowrap cursor-pointer">
-                                <Upload className="h-4 w-4" />
-                                {uploading ? "Subiendo..." : "Subir archivo"}
-                                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} disabled={uploading} />
-                            </label>
                         </div>
 
                         {/* Content */}
