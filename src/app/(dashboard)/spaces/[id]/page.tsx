@@ -672,7 +672,7 @@ export default function SpacePage() {
                 {showNewFolderModal && (
                     <>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowNewFolderModal(false)} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-[30%] left-1/2 -translate-x-1/2 w-full max-w-md z-50 mx-4">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-50 px-4">
                             <div className="bg-background rounded-2xl border border-border shadow-2xl p-6">
                                 <h3 className="text-lg font-semibold mb-4">Nueva carpeta</h3>
                                 <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Nombre de la carpeta" className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 mb-4" autoFocus />
@@ -691,7 +691,7 @@ export default function SpacePage() {
                 {showNewTaskModal && (
                     <>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowNewTaskModal(false)} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-[30%] left-1/2 -translate-x-1/2 w-full max-w-md z-50 mx-4">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md z-50 px-4">
                             <div className="bg-background rounded-2xl border border-border shadow-2xl p-6">
                                 <h3 className="text-lg font-semibold mb-4">Nueva tarea</h3>
                                 <input type="text" value={newTaskTitle} onChange={(e) => setNewTaskTitle(e.target.value)} placeholder="Título de la tarea" className="w-full px-4 py-2.5 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 mb-4" autoFocus />
