@@ -370,8 +370,8 @@ export default function SpacePage() {
                     </div>
                 </div>
 
-                {/* Unified Control Bar */}
-                <div className="rounded-2xl border border-border bg-background mb-6 overflow-hidden">
+                {/* Unified Workspace Container */}
+                <div className="rounded-2xl border border-border bg-background overflow-hidden">
                     {/* Stats Row - Clickable filters */}
                     <div className="flex items-center divide-x divide-border border-b border-border">
                         <button 
@@ -445,19 +445,18 @@ export default function SpacePage() {
                             <span className="hidden sm:inline">{space.name}</span>
                         </button>
                     </div>
-                </div>
 
-                {/* FILES TAB - Unified Finder Layout */}
-                {activeTab === "files" && (
-                    <div className="rounded-2xl border border-border bg-background overflow-hidden min-h-[400px] flex">
-                        {/* Left Panel - Folder Tree */}
-                        <div className="w-56 flex-shrink-0 border-r border-border hidden md:flex md:flex-col">
-                            <div className="p-3 border-b border-border bg-muted/30">
-                                <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                                    <Folder className="h-4 w-4" />
-                                    Carpetas
-                                </h3>
-                            </div>
+                    {/* FILES TAB - Finder Layout */}
+                    {activeTab === "files" && (
+                        <div className="flex min-h-[400px] border-t border-border">
+                            {/* Left Panel - Folder Tree */}
+                            <div className="w-56 flex-shrink-0 border-r border-border hidden md:flex md:flex-col">
+                                <div className="p-3 border-b border-border bg-muted/30">
+                                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                                        <Folder className="h-4 w-4" />
+                                        Carpetas
+                                    </h3>
+                                </div>
                             <FolderTree
                                 folders={allFolders}
                                 currentFolderId={currentFolderId}
@@ -599,9 +598,9 @@ export default function SpacePage() {
                     </div>
                 )}
 
-                {/* TASKS TAB */}
-                {activeTab === "tasks" && (
-                    <div className="space-y-6">
+                    {/* TASKS TAB */}
+                    {activeTab === "tasks" && (
+                        <div className="p-4 space-y-6 border-t border-border">
                         <button onClick={() => setShowNewTaskModal(true)} className="w-full p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/50 transition-all flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground">
                             <Plus className="h-5 w-5" />
                             Nueva tarea
@@ -659,9 +658,9 @@ export default function SpacePage() {
                     </div>
                 )}
 
-                {/* GOALS TAB */}
-                {activeTab === "goals" && (
-                    <div className="space-y-4">
+                    {/* GOALS TAB */}
+                    {activeTab === "goals" && (
+                        <div className="p-4 space-y-4 border-t border-border">
                         {filteredGoals.length > 0 ? (
                             filteredGoals.map((goal) => (
                                 <motion.div key={goal.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-xl border border-border bg-background">
@@ -686,8 +685,9 @@ export default function SpacePage() {
                                 <p className="text-muted-foreground">No hay metas en este espacio</p>
                             </div>
                         )}
-                    </div>
-                )}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* New Folder Modal */}
