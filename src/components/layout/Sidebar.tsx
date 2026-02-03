@@ -21,7 +21,8 @@ import {
     BarChart2, 
     LogOut, 
     X, 
-    Layers
+    Layers,
+    Brain
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSpaces } from "@/hooks/useSpaces";
@@ -45,6 +46,7 @@ const mainNavItems: NavItem[] = [
     { icon: Target, label: "Objetivos", href: "/goals" },
     { icon: Focus, label: "Focus", href: "/focus" },
     { icon: BarChart2, label: "Progreso", href: "/stats" },
+    { icon: Brain, label: "Memoria", href: "/memory" },
 ];
 
 const bottomNavItems: NavItem[] = [
