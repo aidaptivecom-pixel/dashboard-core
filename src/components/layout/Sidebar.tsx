@@ -30,6 +30,7 @@ import { useSpacesHealth } from "@/hooks/useSpacesHealth";
 import { useCaptures } from "@/hooks/useCaptures";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
+import { useSidebar } from "@/context/SidebarContext";
 
 interface NavItem {
     icon: React.ElementType;
@@ -66,15 +67,13 @@ const colorOptions = [
 const iconOptions = ["📁", "💼", "🚀", "🎯", "💡", "🏠", "🎨", "📊", "🔧", "🌱", "🤖", "👤", "📱", "💰", "🎮", "📚"];
 
 export function Sidebar() {
-    const [collapsed, setCollapsed] = useState(false);
-    const [spacesOpen, setSpacesOpen] = useState(true);
-    const [aidaptiveCoreOpen, setAidaptiveCoreOpen] = useState(() => {
-        // Inicializar desde localStorage si existe
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('aidaptiveCoreOpen') === 'true';
-        }
-        return false;
-    });
+    // Estado persistente del sidebar desde Context
+    const { 
+        collapsed, setCollapsed, 
+        spacesOpen, setSpacesOpen, 
+        aidaptiveCoreOpen, setAidaptiveCoreOpen 
+    } = useSidebar();
+    
     const [showNewSpaceModal, setShowNewSpaceModal] = useState(false);
     const [newSpaceName, setNewSpaceName] = useState("");
     const [newSpaceIcon, setNewSpaceIcon] = useState("📁");
@@ -101,12 +100,7 @@ export function Sidebar() {
         if (isInAidaptiveSpace && !aidaptiveCoreOpen) {
             setAidaptiveCoreOpen(true);
         }
-    }, [isInAidaptiveSpace]);
-
-    // Persistir estado en localStorage
-    useEffect(() => {
-        localStorage.setItem('aidaptiveCoreOpen', String(aidaptiveCoreOpen));
-    }, [aidaptiveCoreOpen]);
+    }, [isInAidaptiveSpace, aidaptiveCoreOpen, setAidaptiveCoreOpen]);
 
     const handleCreateSpace = async () => {
         if (!newSpaceName.trim()) return;
