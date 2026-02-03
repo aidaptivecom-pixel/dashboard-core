@@ -351,9 +351,9 @@ export default function SpacePage() {
 
     return (
         <>
-            <div className="max-w-6xl mx-auto">
+            <div className="max-w-6xl mx-auto h-full flex flex-col">
                 {/* Header */}
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-6 flex-shrink-0">
                     <div className="flex items-center gap-4">
                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl text-3xl" style={{ backgroundColor: `${space.color || '#4F6BFF'}15` }}>
                             {space.icon || "📁"}
@@ -371,7 +371,7 @@ export default function SpacePage() {
                 </div>
 
                 {/* Unified Workspace Container */}
-                <div className="rounded-2xl border border-border bg-background overflow-hidden">
+                <div className="rounded-2xl border border-border bg-background overflow-hidden flex-1 flex flex-col">
                     {/* Stats Row - Clickable filters */}
                     <div className="flex items-center divide-x divide-border border-b border-border">
                         <button 
@@ -448,7 +448,7 @@ export default function SpacePage() {
 
                     {/* FILES TAB - Finder Layout */}
                     {activeTab === "files" && (
-                        <div className="flex min-h-[400px] border-t border-border">
+                        <div className="flex flex-1 border-t border-border">
                             {/* Left Panel - Folder Tree */}
                             <div className="w-56 flex-shrink-0 border-r border-border hidden md:flex md:flex-col">
                                 <div className="p-3 border-b border-border bg-muted/30">
@@ -600,7 +600,7 @@ export default function SpacePage() {
 
                     {/* TASKS TAB */}
                     {activeTab === "tasks" && (
-                        <div className="p-4 space-y-6 border-t border-border">
+                        <div className="p-4 space-y-6 border-t border-border flex-1 overflow-y-auto">
                         <button onClick={() => setShowNewTaskModal(true)} className="w-full p-4 rounded-xl border-2 border-dashed border-border hover:border-primary/50 hover:bg-accent/50 transition-all flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground">
                             <Plus className="h-5 w-5" />
                             Nueva tarea
@@ -660,7 +660,7 @@ export default function SpacePage() {
 
                     {/* GOALS TAB */}
                     {activeTab === "goals" && (
-                        <div className="p-4 space-y-4 border-t border-border">
+                        <div className="p-4 space-y-4 border-t border-border flex-1 overflow-y-auto">
                         {filteredGoals.length > 0 ? (
                             filteredGoals.map((goal) => (
                                 <motion.div key={goal.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-4 rounded-xl border border-border bg-background">
