@@ -450,7 +450,7 @@ export default function SpacePage() {
                     {activeTab === "files" && (
                         <div className="flex flex-1 min-h-0 border-t border-border">
                             {/* Left Panel - Folder Tree */}
-                            <div className="w-56 flex-shrink-0 border-r border-border hidden md:flex md:flex-col">
+                            <div className="w-56 flex-shrink-0 border-r border-border hidden md:flex md:flex-col overflow-hidden">
                                 <div className="p-3 border-b border-border bg-muted/30">
                                     <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                         <Folder className="h-4 w-4" />
