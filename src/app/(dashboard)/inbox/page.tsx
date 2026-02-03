@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     Inbox,
@@ -120,16 +119,16 @@ export default function InboxPage() {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     return (
-        <MainLayout>
+        <>
             <div className="h-[calc(100vh-120px)] flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
@@ -484,6 +483,6 @@ export default function InboxPage() {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }

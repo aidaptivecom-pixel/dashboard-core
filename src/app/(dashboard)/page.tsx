@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { 
@@ -65,7 +64,7 @@ export default function Home() {
     const remainingTasks = pendingTasks.length - MAX_TASKS;
 
     return (
-        <MainLayout>
+        <>
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <motion.div 
@@ -318,6 +317,6 @@ export default function Home() {
                     </motion.div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }

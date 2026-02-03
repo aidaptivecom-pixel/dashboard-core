@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import {
     Brain,
@@ -154,16 +153,16 @@ export default function MemoryPage() {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     return (
-        <MainLayout>
+        <>
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -315,6 +314,6 @@ export default function MemoryPage() {
                     )}
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }

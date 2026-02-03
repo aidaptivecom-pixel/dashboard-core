@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { NoteEditor } from "@/components/editor/NoteEditor";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -255,21 +254,21 @@ export default function SpacePage() {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     if (!space) {
         return (
-            <MainLayout>
+            <>
                 <div className="flex items-center justify-center h-full">
                     <p className="text-muted-foreground">Espacio no encontrado</p>
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
@@ -350,7 +349,7 @@ export default function SpacePage() {
     };
 
     return (
-        <MainLayout>
+        <>
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="flex items-start justify-between mb-6">
@@ -738,6 +737,6 @@ export default function SpacePage() {
                     </>
                 )}
             </AnimatePresence>
-        </MainLayout>
+        </>
     );
 }

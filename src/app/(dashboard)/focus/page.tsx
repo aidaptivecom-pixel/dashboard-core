@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { FocusMode } from "@/components/focus/FocusMode";
 import { motion } from "framer-motion";
 import {
@@ -111,16 +110,16 @@ export default function FocusPage() {
 
     if (loading) {
         return (
-            <MainLayout>
+            <>
                 <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 </div>
-            </MainLayout>
+            </>
         );
     }
 
     return (
-        <MainLayout>
+        <>
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <motion.div
@@ -312,6 +311,6 @@ export default function FocusPage() {
                 } : undefined}
                 onTaskComplete={handleTaskComplete}
             />
-        </MainLayout>
+        </>
     );
 }

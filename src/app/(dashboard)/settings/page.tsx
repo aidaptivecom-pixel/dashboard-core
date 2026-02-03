@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { 
     Settings, User, Bell, Palette, Database, Keyboard, Sun, Moon, Monitor, Globe, Check, Bot, MessageSquare, Clock, Zap, Shield, Trash2, Download, Upload, Link, Unlink, Smartphone, Camera,
@@ -60,7 +59,7 @@ export default function SettingsPage() {
     ];
 
     return (
-        <MainLayout>
+        <>
             <div className="max-w-4xl mx-auto">
                 {/* Header */}
                 <motion.div className="mb-6 sm:mb-8" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
@@ -287,6 +286,6 @@ export default function SettingsPage() {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }

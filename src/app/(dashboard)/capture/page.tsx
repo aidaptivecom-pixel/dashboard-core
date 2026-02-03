@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import { Inbox, Mic, Image as ImageIcon, FileText, Link2, Lightbulb, Send, Trash2, FolderOpen, Sparkles, Upload, Square, Clock, X, Filter, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -159,7 +158,7 @@ export default function CapturePage() {
     };
 
     return (
-        <MainLayout>
+        <>
             <div className="max-w-3xl mx-auto pb-32 md:pb-8">
                 <div className="mb-6">
                     <h1 className="text-2xl font-bold flex items-center gap-3">
@@ -344,6 +343,6 @@ export default function CapturePage() {
                     </div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }

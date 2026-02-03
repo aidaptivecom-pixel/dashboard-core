@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Target, Plus, ChevronDown, CheckCircle2, TrendingUp, Clock, Sparkles, Trophy, Edit3, Trash2, X } from "lucide-react";
@@ -111,7 +110,7 @@ export default function GoalsPage() {
     const getSpaceForGoal = (spaceId: string | null) => spaces.find(s => s.id === spaceId);
 
     return (
-        <MainLayout>
+        <>
             <div className="max-w-4xl mx-auto">
                 <motion.div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
                     <div>
@@ -316,6 +315,6 @@ export default function GoalsPage() {
                     </>
                 )}
             </AnimatePresence>
-        </MainLayout>
+        </>
     );
 }

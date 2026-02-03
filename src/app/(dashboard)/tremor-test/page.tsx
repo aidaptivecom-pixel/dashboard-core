@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import Link from "next/link";
 import { 
   Inbox, 
@@ -83,7 +82,7 @@ export default function TremorTestPage() {
   const userName = profile?.name?.split(" ")[0] || "Usuario";
 
   return (
-    <MainLayout>
+    <>
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-8">
@@ -325,6 +324,6 @@ export default function TremorTestPage() {
           .
         </Text>
       </div>
-    </MainLayout>
+    </>
   );
 }

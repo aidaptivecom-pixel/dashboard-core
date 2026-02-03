@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
 import { motion } from "framer-motion";
 import { BarChart3, TrendingUp, TrendingDown, Clock, CheckCircle2, Target, Flame, ChevronLeft, ChevronRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -57,7 +56,7 @@ export default function StatsPage() {
     };
 
     return (
-        <MainLayout>
+        <>
             <div className="max-w-5xl mx-auto">
                 {/* Header */}
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
@@ -192,6 +191,6 @@ export default function StatsPage() {
                     </motion.div>
                 </div>
             </div>
-        </MainLayout>
+        </>
     );
 }
