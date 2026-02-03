@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -68,7 +68,13 @@ const iconOptions = ["📁", "💼", "🚀", "🎯", "💡", "🏠", "🎨", "�
 export function Sidebar() {
     const [collapsed, setCollapsed] = useState(false);
     const [spacesOpen, setSpacesOpen] = useState(true);
-    const [aidaptiveCoreOpen, setAidaptiveCoreOpen] = useState(false);
+    const [aidaptiveCoreOpen, setAidaptiveCoreOpen] = useState(() => {
+        // Inicializar desde localStorage si existe
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('aidaptiveCoreOpen') === 'true';
+        }
+        return false;
+    });
     const [showNewSpaceModal, setShowNewSpaceModal] = useState(false);
     const [newSpaceName, setNewSpaceName] = useState("");
     const [newSpaceIcon, setNewSpaceIcon] = useState("📁");
@@ -82,8 +88,25 @@ export function Sidebar() {
     const { signOut } = useAuth();
 
     // Separar espacios de Aidaptive Core del resto
-    const aidaptiveSpaces = spaces.filter(s => s.name.startsWith('Aidaptive'));
-    const otherSpaces = spaces.filter(s => !s.name.startsWith('Aidaptive'));
+    const aidaptiveSpaces = useMemo(() => spaces.filter(s => s.name.startsWith('Aidaptive')), [spaces]);
+    const otherSpaces = useMemo(() => spaces.filter(s => !s.name.startsWith('Aidaptive')), [spaces]);
+
+    // Auto-abrir si estamos en un espacio de Aidaptive
+    const isInAidaptiveSpace = useMemo(() => {
+        const currentSpaceId = pathname.match(/\/spaces\/([^/]+)/)?.[1];
+        return aidaptiveSpaces.some(s => s.id === currentSpaceId);
+    }, [pathname, aidaptiveSpaces]);
+
+    useEffect(() => {
+        if (isInAidaptiveSpace && !aidaptiveCoreOpen) {
+            setAidaptiveCoreOpen(true);
+        }
+    }, [isInAidaptiveSpace]);
+
+    // Persistir estado en localStorage
+    useEffect(() => {
+        localStorage.setItem('aidaptiveCoreOpen', String(aidaptiveCoreOpen));
+    }, [aidaptiveCoreOpen]);
 
     const handleCreateSpace = async () => {
         if (!newSpaceName.trim()) return;
@@ -198,12 +221,13 @@ export function Sidebar() {
                             <ChevronDown className={cn("h-3 w-3 ml-auto transition-transform", !spacesOpen && "-rotate-90")} />
                         </button>
 
-                        <AnimatePresence>
+                        <AnimatePresence initial={false}>
                             {spacesOpen && (
                                 <motion.ul 
                                     initial={{ opacity: 0, height: 0 }} 
                                     animate={{ opacity: 1, height: "auto" }} 
-                                    exit={{ opacity: 0, height: 0 }} 
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.15, ease: "easeOut" }}
                                     className="space-y-1 mt-1"
                                 >
                                     {spacesLoading ? (
@@ -231,12 +255,13 @@ export function Sidebar() {
                                                         )} />
                                                     </button>
                                                     
-                                                    <AnimatePresence>
+                                                    <AnimatePresence initial={false}>
                                                         {aidaptiveCoreOpen && (
                                                             <motion.ul
                                                                 initial={{ opacity: 0, height: 0 }}
                                                                 animate={{ opacity: 1, height: "auto" }}
                                                                 exit={{ opacity: 0, height: 0 }}
+                                                                transition={{ duration: 0.15, ease: "easeOut" }}
                                                                 className="ml-4 mt-1 space-y-1 border-l border-border pl-2"
                                                             >
                                                                 {aidaptiveSpaces.map((space) => {
