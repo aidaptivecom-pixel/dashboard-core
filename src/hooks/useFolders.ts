@@ -19,7 +19,7 @@ interface Folder {
 
 export type { Folder };
 
-export function useFolders(spaceId: string, parentId?: string | null) {
+export function useFolders(spaceId: string, parentId?: string | null, options?: { all?: boolean }) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,10 +34,13 @@ export function useFolders(spaceId: string, parentId?: string | null) {
       .eq('space_id', spaceId)
       .order('sort_order', { ascending: true });
 
-    if (parentId === null) {
-      query = query.is('parent_id', null);
-    } else if (parentId) {
-      query = query.eq('parent_id', parentId);
+    // If all=true, get all folders without parent filter
+    if (!options?.all) {
+      if (parentId === null) {
+        query = query.is('parent_id', null);
+      } else if (parentId) {
+        query = query.eq('parent_id', parentId);
+      }
     }
 
     const { data, error } = await query;

@@ -46,6 +46,7 @@ import { useTasks } from "@/hooks/useTasks";
 import { useFolders, Folder as FolderData } from "@/hooks/useFolders";
 import { useFiles } from "@/hooks/useFiles";
 import { SystemFolderView } from "@/components/project/SystemFolderView";
+import { FolderTree } from "@/components/project/FolderTree";
 
 interface Space {
     id: string;
@@ -148,32 +149,11 @@ export default function SpacePage() {
     const [showNewTaskModal, setShowNewTaskModal] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newTaskPriority, setNewTaskPriority] = useState<"low" | "medium" | "high">("medium");
-    const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-
     const { goals } = useGoals(spaceId);
     const { tasks, createTask, updateTask } = useTasks(spaceId);
     const { folders: currentFolders, createFolder } = useFolders(spaceId, currentFolderId);
-    const { folders: allFolders } = useFolders(spaceId, null); // Get all folders for tree
+    const { folders: allFolders, loading: foldersLoading } = useFolders(spaceId, null, { all: true }); // Get all folders for tree
     const { files, uploading, uploadFile, toggleStar } = useFiles(spaceId, currentFolderId);
-
-    // Toggle folder expansion in tree
-    const toggleFolderExpand = (folderId: string) => {
-        setExpandedFolders(prev => {
-            const next = new Set(prev);
-            if (next.has(folderId)) {
-                next.delete(folderId);
-            } else {
-                next.add(folderId);
-            }
-            return next;
-        });
-    };
-
-    // Get root folders (no parent)
-    const rootFolders = allFolders.filter(f => !f.parent_id);
-    
-    // Get children of a folder
-    const getChildFolders = (parentId: string) => allFolders.filter(f => f.parent_id === parentId);
 
     useEffect(() => {
         const fetchSpaceData = async () => {
@@ -470,7 +450,7 @@ export default function SpacePage() {
                 {/* FILES TAB - Finder Layout */}
                 {activeTab === "files" && (
                     <div className="flex gap-4 min-h-[400px]">
-                        {/* Left Panel - Folders */}
+                        {/* Left Panel - Folder Tree */}
                         <div className="w-56 flex-shrink-0 rounded-2xl border border-border bg-background overflow-hidden hidden md:flex md:flex-col">
                             <div className="p-3 border-b border-border bg-muted/30">
                                 <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
@@ -478,43 +458,26 @@ export default function SpacePage() {
                                     Carpetas
                                 </h3>
                             </div>
-                            <div className="flex-1 overflow-y-auto p-2">
-                                {/* Root folder */}
-                                <button 
-                                    onClick={() => navigateToFolder(null)} 
-                                    className={cn(
-                                        "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all text-left",
-                                        !currentFolderId ? "bg-primary/10 text-primary font-medium" : "hover:bg-accent text-muted-foreground hover:text-foreground"
-                                    )}
-                                >
-                                    <Home className="h-4 w-4 flex-shrink-0" />
-                                    <span className="truncate">Raíz</span>
-                                </button>
-                                
-                                {/* Folder list */}
-                                {currentFolders.map((folder) => (
-                                    <button 
-                                        key={folder.id}
-                                        onClick={() => navigateToFolder(folder.id, { id: folder.id, name: folder.name, icon: folder.icon, parent_id: folder.parent_id, system_view: (folder as any).system_view || null })} 
-                                        className={cn(
-                                            "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all text-left",
-                                            currentFolderId === folder.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-accent text-muted-foreground hover:text-foreground"
-                                        )}
-                                    >
-                                        <Folder className="h-4 w-4 flex-shrink-0 text-yellow-500" />
-                                        <span className="truncate">{folder.name}</span>
-                                    </button>
-                                ))}
-                                
-                                {/* New folder button */}
-                                <button 
-                                    onClick={() => setShowNewFolderModal(true)}
-                                    className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all mt-2 border border-dashed border-border"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    <span>Nueva</span>
-                                </button>
-                            </div>
+                            <FolderTree
+                                folders={allFolders}
+                                currentFolderId={currentFolderId}
+                                onFolderSelect={(folderId, folder) => {
+                                    if (folderId === null) {
+                                        navigateToFolder(null);
+                                    } else if (folder) {
+                                        navigateToFolder(folderId, {
+                                            id: folder.id,
+                                            name: folder.name,
+                                            icon: folder.icon,
+                                            parent_id: folder.parent_id,
+                                            system_view: folder.system_view || null
+                                        });
+                                    }
+                                }}
+                                onNewFolder={() => setShowNewFolderModal(true)}
+                                spaceName={space.name}
+                                loading={foldersLoading}
+                            />
                         </div>
 
                         {/* Right Panel - Content */}
