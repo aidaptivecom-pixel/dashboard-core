@@ -560,7 +560,7 @@ function CategoryModal({open,onOpenChange,categories,onAdd}:{
 function FilterBar({
   statusFilter,setStatusFilter,typeFilter,setTypeFilter,
   categoryFilter,setCategoryFilter,paymentFilter,setPaymentFilter,
-  sortField,setSortField,categories,
+  sortField,setSortField,categories,excludeDebts,setExcludeDebts,
 }:{
   statusFilter:StatusFilter;setStatusFilter:(v:StatusFilter)=>void;
   typeFilter:ItemType|"all";setTypeFilter:(v:ItemType|"all")=>void;
@@ -568,11 +568,16 @@ function FilterBar({
   paymentFilter:string;setPaymentFilter:(v:string)=>void;
   sortField:SortField;setSortField:(v:SortField)=>void;
   categories:Category[];
+  excludeDebts:boolean;setExcludeDebts:(v:boolean)=>void;
 }){
   const selectCls="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-primary";
   return (
     <div className="flex flex-wrap items-center gap-2 p-3 border-b border-border">
       <Filter className="h-4 w-4 text-muted-foreground"/>
+      <button onClick={()=>setExcludeDebts(!excludeDebts)}
+        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${excludeDebts?"bg-amber-500/20 text-amber-400 border border-amber-500/30":"bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700"}`}>
+        {excludeDebts?"🚫 Deudas excluidas":"Excluir deudas"}
+      </button>
       <select className={selectCls} value={statusFilter} onChange={e=>setStatusFilter(e.target.value as StatusFilter)}>
         <option value="all">Estado: Todos</option>
         <option value="paid">✅ Pagados</option>
@@ -610,8 +615,8 @@ export default function FinancesPage() {
   const fin = useFinances();
   const {
     loading, selectedMonth, setSelectedMonth,
-    totalExpensesARS, totalPaidExpensesARS, totalDebtsARS, totalIncomeARS,
-    gap, semaphore, filteredItems,
+    totalExpensesARS, displayPaidARS, totalDebtsARS, displayDebtsARS, totalIncomeARS,
+    gap, semaphore, filteredItems, excludeDebts, setExcludeDebts,
     blueRate, updateBlueRate, categories,
     statusFilter, setStatusFilter, typeFilter, setTypeFilter,
     categoryFilter, setCategoryFilter, paymentFilter, setPaymentFilter,
@@ -709,12 +714,13 @@ export default function FinancesPage() {
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><Wallet className="h-4 w-4 text-sky-400"/>Gastos pagados</div>
-          <p className="text-xl font-bold text-sky-400">{fmtARS(totalPaidExpensesARS)}</p>
-          {totalExpensesARS > 0 && <p className="text-xs text-muted-foreground mt-1">{Math.round((totalPaidExpensesARS / totalExpensesARS) * 100)}% del total</p>}
+          <p className="text-xl font-bold text-sky-400">{fmtARS(displayPaidARS)}</p>
+          {totalExpensesARS > 0 && <p className="text-xs text-muted-foreground mt-1">{Math.round((displayPaidARS / (totalExpensesARS + displayDebtsARS || 1)) * 100)}% del total</p>}
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className={`rounded-xl border bg-card p-4 ${excludeDebts ? "border-zinc-600 opacity-40" : "border-border"}`}>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><AlertCircle className="h-4 w-4 text-amber-400"/>Deudas del mes</div>
-          <p className="text-xl font-bold text-amber-400">{fmtARS(totalDebtsARS)}</p>
+          <p className="text-xl font-bold text-amber-400">{fmtARS(displayDebtsARS)}</p>
+          {excludeDebts && <p className="text-xs text-zinc-500 mt-1">Excluidas</p>}
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><TrendingUp className="h-4 w-4 text-emerald-400"/>Ingresos esperados</div>
@@ -742,6 +748,7 @@ export default function FinancesPage() {
               paymentFilter={paymentFilter} setPaymentFilter={setPaymentFilter}
               sortField={sortField} setSortField={setSortField}
               categories={categories}
+              excludeDebts={excludeDebts} setExcludeDebts={setExcludeDebts}
             />
 
             {/* Table header — 10 cols + actions */}

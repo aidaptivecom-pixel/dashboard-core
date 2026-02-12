@@ -208,6 +208,7 @@ export function useFinances() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>("due_date");
+  const [excludeDebts, setExcludeDebts] = useState(false);
 
   const updateBlueRate = useCallback((rate: number) => {
     setBlueRate(rate);
@@ -367,7 +368,24 @@ export function useFinances() {
     [expenses, blueRate, paymentsByItem]
   );
 
-  const gap = totalIncomeARS - totalExpensesARS - totalDebtsARS;
+  // Filtered totals (respect excludeDebts toggle)
+  const displayDebtsARS = excludeDebts ? 0 : totalDebtsARS;
+  const displayPaidARS = useMemo(() => {
+    if (!excludeDebts) return totalPaidExpensesARS;
+    // When excluding debts, only count expense payments (no debt payments)
+    let total = 0;
+    expenses.forEach((e) => {
+      const itemPayments = paymentsByItem[e.id] || [];
+      if (itemPayments.length > 0) {
+        total += itemPayments.reduce((s, p) => s + toARS(Number(p.amount), p.currency, blueRate), 0);
+      } else if (e.paid) {
+        total += toARS(e.amount, e.currency, blueRate);
+      }
+    });
+    return total;
+  }, [excludeDebts, totalPaidExpensesARS, expenses, paymentsByItem, blueRate]);
+
+  const gap = totalIncomeARS - totalExpensesARS - displayDebtsARS;
   const marginPercent = totalIncomeARS > 0 ? (gap / totalIncomeARS) * 100 : -100;
 
   const semaphore: "green" | "yellow" | "red" =
@@ -477,6 +495,9 @@ export function useFinances() {
   const filteredItems = useMemo(() => {
     let items = [...unifiedItems];
 
+    if (excludeDebts) {
+      items = items.filter((i) => i.type !== "debt");
+    }
     if (statusFilter !== "all") {
       items = items.filter((i) => getItemStatus(i) === statusFilter);
     }
@@ -697,8 +718,12 @@ export function useFinances() {
     setSelectedMonth,
     totalExpensesARS,
     totalPaidExpensesARS,
+    displayPaidARS,
     totalDebtsARS,
+    displayDebtsARS,
     totalIncomeARS,
+    excludeDebts,
+    setExcludeDebts,
     gap,
     marginPercent,
     semaphore,
