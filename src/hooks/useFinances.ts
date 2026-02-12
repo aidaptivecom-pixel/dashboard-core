@@ -503,6 +503,20 @@ export function useFinances() {
     [paymentsByItem]
   );
 
+  const deleteItem = useCallback(async (type: ItemType, id: string) => {
+    const supabase = createClient();
+    const table = type === "expense" ? "financial_expenses" : type === "income" ? "financial_income" : "financial_debts";
+    // Delete associated payments first
+    await supabase.from("financial_payments").delete().eq("item_id", id);
+    const { error } = await supabase.from(table).delete().eq("id", id);
+    if (error) {
+      console.error("Delete error:", error);
+      alert(`Error al eliminar: ${error.message}`);
+      return;
+    }
+    await fetchData();
+  }, [fetchData]);
+
   // Category CRUD
   const addCategory = useCallback(async (name: string, color: string) => {
     const supabase = createClient();
@@ -577,6 +591,7 @@ export function useFinances() {
     togglePaid,
     insertItem,
     updateItem,
+    deleteItem,
     addCategory,
     updateCategory,
     deleteCategory,

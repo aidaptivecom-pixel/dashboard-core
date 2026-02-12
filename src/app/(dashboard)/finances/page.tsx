@@ -17,6 +17,7 @@ import {
   Settings,
   X,
   Filter,
+  Trash2,
 } from "lucide-react";
 import {
   useFinances,
@@ -216,7 +217,7 @@ function PaymentHistory({
 
 /* ─── Add/Edit Modal ─── */
 function ItemModal({
-  open,onOpenChange,categories,onSave,onUpload,editItem,onAddCategory,onAddPayment,
+  open,onOpenChange,categories,onSave,onUpload,editItem,onAddCategory,onAddPayment,onDelete,
 }:{
   open:boolean;
   onOpenChange:(o:boolean)=>void;
@@ -226,6 +227,7 @@ function ItemModal({
   editItem:UnifiedItem|null;
   onAddCategory:(name:string,color:string)=>Promise<void>;
   onAddPayment:(itemId:string,itemType:ItemType,amount:number,currency:"ARS"|"USD",paymentDate:string,paymentMethod:string,notes?:string)=>Promise<void>;
+  onDelete:(type:ItemType,id:string)=>Promise<void>;
 }){
   const isEdit=!!editItem;
   const [type,setType]=useState<ItemType>(editItem?.type||"expense");
@@ -441,6 +443,12 @@ function ItemModal({
           )}
 
           <div className="flex gap-3 mt-6">
+            {isEdit&&(
+              <button onClick={async()=>{if(confirm("¿Eliminar este movimiento?")){await onDelete(type,editItem!.id);onOpenChange(false);}}}
+                className="px-4 py-2 rounded-lg bg-rose-500/10 text-rose-400 text-sm font-medium hover:bg-rose-500/20 transition-colors">
+                <Trash2 className="h-4 w-4 inline mr-1"/>Eliminar
+              </button>
+            )}
             <Dialog.Close className="flex-1 py-2 rounded-lg bg-zinc-800 text-sm hover:bg-zinc-700 transition-colors">Cancelar</Dialog.Close>
             <button onClick={handleSave} disabled={saving||!desc||!amount}
               className="flex-1 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
@@ -564,7 +572,7 @@ export default function FinancesPage() {
     blueRate, updateBlueRate, categories,
     statusFilter, setStatusFilter, typeFilter, setTypeFilter,
     categoryFilter, setCategoryFilter, paymentFilter, setPaymentFilter,
-    sortField, setSortField, togglePaid, insertItem, updateItem,
+    sortField, setSortField, togglePaid, insertItem, updateItem, deleteItem,
     addCategory, uploadReceipt, addPayment,
   } = fin;
 
@@ -818,6 +826,7 @@ export default function FinancesPage() {
         editItem={editItem}
         onAddCategory={addCategory}
         onAddPayment={handleAddPayment}
+        onDelete={deleteItem}
       />
     </div>
   );
