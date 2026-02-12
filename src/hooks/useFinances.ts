@@ -217,7 +217,17 @@ export function useFinances() {
   );
 
   const monthDebts = useMemo(
-    () => debts.filter((d) => d.due_date && isInMonth(d.due_date, selectedMonth.year, selectedMonth.month)),
+    () => debts.filter((d) => {
+      // Paid debts: show only in the month they were due
+      if (d.status === "paid") {
+        return d.due_date && isInMonth(d.due_date, selectedMonth.year, selectedMonth.month);
+      }
+      // Unpaid debts: show in due_date month AND all future months
+      if (!d.due_date) return true;
+      const dueDate = new Date(d.due_date + "T00:00:00");
+      const selectedDate = new Date(selectedMonth.year, selectedMonth.month + 1, 0); // last day of selected month
+      return dueDate <= selectedDate;
+    }),
     [debts, selectedMonth]
   );
 
@@ -239,6 +249,11 @@ export function useFinances() {
   const totalIncomeARS = useMemo(
     () => monthIncome.reduce((sum, i) => sum + toARS(i.amount, i.currency, blueRate), 0),
     [monthIncome, blueRate]
+  );
+
+  const totalPaidExpensesARS = useMemo(
+    () => expenses.filter((e) => e.paid).reduce((sum, e) => sum + toARS(e.amount, e.currency, blueRate), 0),
+    [expenses, blueRate]
   );
 
   const gap = totalIncomeARS - totalExpensesARS - totalDebtsARS;
@@ -566,6 +581,7 @@ export function useFinances() {
     selectedMonth,
     setSelectedMonth,
     totalExpensesARS,
+    totalPaidExpensesARS,
     totalDebtsARS,
     totalIncomeARS,
     gap,

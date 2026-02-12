@@ -567,7 +567,7 @@ export default function FinancesPage() {
   const fin = useFinances();
   const {
     loading, selectedMonth, setSelectedMonth,
-    totalExpensesARS, totalDebtsARS, totalIncomeARS,
+    totalExpensesARS, totalPaidExpensesARS, totalDebtsARS, totalIncomeARS,
     gap, semaphore, filteredItems,
     blueRate, updateBlueRate, categories,
     statusFilter, setStatusFilter, typeFilter, setTypeFilter,
@@ -659,10 +659,15 @@ export default function FinancesPage() {
       </motion.div>
 
       {/* Summary Cards */}
-      <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.1}}>
+      <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.1}}>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><TrendingDown className="h-4 w-4 text-rose-400"/>Gastos mensuales</div>
           <p className="text-xl font-bold text-rose-400">{fmtARS(totalExpensesARS)}</p>
+        </div>
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><Wallet className="h-4 w-4 text-sky-400"/>Gastos pagados</div>
+          <p className="text-xl font-bold text-sky-400">{fmtARS(totalPaidExpensesARS)}</p>
+          {totalExpensesARS > 0 && <p className="text-xs text-muted-foreground mt-1">{Math.round((totalPaidExpensesARS / totalExpensesARS) * 100)}% del total</p>}
         </div>
         <div className="rounded-xl border border-border bg-card p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><AlertCircle className="h-4 w-4 text-amber-400"/>Deudas del mes</div>
