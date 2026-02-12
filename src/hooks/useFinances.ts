@@ -349,8 +349,22 @@ export function useFinances() {
   );
 
   const totalPaidExpensesARS = useMemo(
-    () => expenses.filter((e) => e.paid).reduce((sum, e) => sum + toARS(e.amount, e.currency, blueRate), 0),
-    [expenses, blueRate]
+    () => {
+      // Sum all payments made on expenses (full + partial), converting to ARS
+      let total = 0;
+      expenses.forEach((e) => {
+        const itemPayments = paymentsByItem[e.id] || [];
+        if (itemPayments.length > 0) {
+          // Sum actual payments, each in their own currency converted to ARS
+          total += itemPayments.reduce((s, p) => s + toARS(Number(p.amount), p.currency, blueRate), 0);
+        } else if (e.paid) {
+          // Marked as paid but no payment records — count full amount
+          total += toARS(e.amount, e.currency, blueRate);
+        }
+      });
+      return total;
+    },
+    [expenses, blueRate, paymentsByItem]
   );
 
   const gap = totalIncomeARS - totalExpensesARS - totalDebtsARS;
