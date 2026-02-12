@@ -288,7 +288,7 @@ function ItemModal({
       data.name=desc;data.amount=Number(amount);data.currency=currency;
       data.category=category;data.payment_method=paymentMethod;
       data.recurrent=recurrent;data.active=true;data.entity=entity;
-      data.paid=paymentType==="total"&&!!paidDate;
+      data.paid=false;
       data.due_date=dueDate||null;data.receipt_url=receiptUrl||null;
       data.paid_date=paidDate||null;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
@@ -296,15 +296,15 @@ function ItemModal({
       data.source=desc;data.amount=Number(amount);data.currency=currency;
       data.category=category;data.payment_method=paymentMethod;
       data.expected_date=dueDate||null;data.receipt_url=receiptUrl||null;
-      data.paid_date=paidDate||null;data.status=paidDate?"received":"expected";data.probability="high";data.entity=entity;
-      data.paid=paymentType==="total"&&!!paidDate;
+      data.paid_date=paidDate||null;data.status="expected";data.probability="high";data.entity=entity;
+      data.paid=false;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     } else {
       data.description=desc;data.total_amount=Number(amount);
       data.amount_paid=0;
       data.currency=currency;data.due_date=dueDate||null;
       data.payment_method=paymentMethod;data.receipt_url=receiptUrl||null;
-      data.status=paymentType==="total"&&paidDate?"paid":"pending";data.priority="medium";data.entity=entity;
+      data.status="pending";data.priority="medium";data.entity=entity;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     }
     // Pass partial amount info for create

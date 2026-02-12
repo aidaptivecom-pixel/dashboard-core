@@ -121,7 +121,8 @@ function isInMonth(dateStr: string, year: number, month: number): boolean {
 }
 
 export function getItemStatus(item: UnifiedItem): "paid" | "overdue" | "upcoming" | "ontime" {
-  if (item.paid) return "paid";
+  if (item.paid && item.totalPaid >= item.amount) return "paid";
+  if (item.totalPaid >= item.amount && item.amount > 0) return "paid";
   const due = item.dueDate;
   if (!due) return "ontime";
   const now = new Date();
