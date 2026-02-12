@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { Home, Inbox, Calendar, Target, Menu, MessageSquare, BarChart3, Settings, X, Brain } from "lucide-react";
+import { Home, Inbox, Calendar, Target, Menu, MessageSquare, BarChart3, Settings, X, Brain, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -15,6 +15,7 @@ const navItems = [
 ];
 
 const moreItems = [
+    { icon: Wallet, label: "Finanzas", href: "/finances" },
     { icon: MessageSquare, label: "Inbox", href: "/inbox" },
     { icon: BarChart3, label: "Progreso", href: "/stats" },
     { icon: Brain, label: "Memoria", href: "/memory" },
