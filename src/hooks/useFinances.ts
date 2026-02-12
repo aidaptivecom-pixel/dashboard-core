@@ -29,6 +29,7 @@ export interface Expense {
   receipt_url: string | null;
   paid: boolean;
   paid_date: string | null;
+  entity: string | null;
 }
 
 export interface Debt {
@@ -44,6 +45,7 @@ export interface Debt {
   notes: string | null;
   payment_method: string | null;
   receipt_url: string | null;
+  entity: string | null;
 }
 
 export interface Income {
@@ -60,6 +62,7 @@ export interface Income {
   receipt_url: string | null;
   paid: boolean;
   paid_date: string | null;
+  entity: string | null;
 }
 
 export type ItemType = "expense" | "debt" | "income";
@@ -85,6 +88,7 @@ export interface UnifiedItem {
   paid: boolean;
   paidDate?: string | null;
   recurrent?: boolean;
+  entity?: string | null;
   rawItem: Expense | Debt | Income;
 }
 
@@ -221,6 +225,7 @@ export function useFinances() {
         paid: e.paid ?? false,
         paidDate: e.paid_date,
         recurrent: e.recurrent,
+        entity: e.entity,
         rawItem: e,
       });
     });
@@ -245,6 +250,7 @@ export function useFinances() {
         paymentMethod: d.payment_method,
         receiptUrl: d.receipt_url,
         paid: d.status === "paid",
+        entity: d.entity,
         rawItem: d,
       });
     });
@@ -270,6 +276,7 @@ export function useFinances() {
         receiptUrl: i.receipt_url,
         paid: i.paid ?? false,
         paidDate: i.paid_date,
+        entity: i.entity,
         rawItem: i,
       });
     });

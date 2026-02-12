@@ -43,6 +43,12 @@ const CATEGORY_COLORS: Record<string, string> = {
 const PRESET_COLORS = ["#3B82F6","#8B5CF6","#06B6D4","#F59E0B","#10B981","#EC4899","#F97316","#6366F1","#EF4444","#94A3B8"];
 
 const PAYMENT_METHODS = ["efectivo","tarjeta","transferencia","crypto"];
+const ENTITIES = ["personal","igreen","aidaptive"];
+const ENTITY_COLORS: Record<string,{bg:string;text:string}> = {
+  personal:{bg:"bg-zinc-500/10",text:"text-zinc-400"},
+  igreen:{bg:"bg-green-500/10",text:"text-green-400"},
+  aidaptive:{bg:"bg-violet-500/10",text:"text-violet-400"},
+};
 
 const TYPE_COLORS = {
   expense:{bg:"bg-rose-500/10",text:"text-rose-400",border:"border-rose-500/20"},
@@ -125,6 +131,7 @@ function ItemModal({
   const [category,setCategory]=useState(editItem?.category||"otros");
   const [paymentMethod,setPaymentMethod]=useState(editItem?.paymentMethod||"transferencia");
   const [recurrent,setRecurrent]=useState(editItem?.recurrent||false);
+  const [entity,setEntity]=useState(editItem?.entity||"personal");
   const [receiptUrl,setReceiptUrl]=useState(editItem?.receiptUrl||"");
   const [uploading,setUploading]=useState(false);
   const [saving,setSaving]=useState(false);
@@ -141,6 +148,7 @@ function ItemModal({
       setCategory(editItem.category||"otros");
       setPaymentMethod(editItem.paymentMethod||"transferencia");
       setRecurrent(editItem.recurrent||false);
+      setEntity(editItem.entity||"personal");
       setReceiptUrl(editItem.receiptUrl||"");
     } else {
       setType("expense");setDesc("");setAmount("");setCurrency("ARS");
@@ -170,7 +178,7 @@ function ItemModal({
     if(type==="expense"){
       data.name=desc;data.amount=Number(amount);data.currency=currency;
       data.category=category;data.payment_method=paymentMethod;
-      data.recurrent=recurrent;data.active=true;
+      data.recurrent=recurrent;data.active=true;data.entity=entity;
       data.due_date=dueDate||null;data.receipt_url=receiptUrl||null;
       data.paid_date=paidDate||null;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
@@ -178,13 +186,13 @@ function ItemModal({
       data.source=desc;data.amount=Number(amount);data.currency=currency;
       data.category=category;data.payment_method=paymentMethod;
       data.expected_date=dueDate||null;data.receipt_url=receiptUrl||null;
-      data.paid_date=paidDate||null;data.status="expected";data.probability="high";
+      data.paid_date=paidDate||null;data.status="expected";data.probability="high";data.entity=entity;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     } else {
       data.description=desc;data.total_amount=Number(amount);data.amount_paid=0;
       data.currency=currency;data.due_date=dueDate||null;
       data.payment_method=paymentMethod;data.receipt_url=receiptUrl||null;
-      data.status="pending";data.priority="medium";
+      data.status="pending";data.priority="medium";data.entity=entity;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     }
     await onSave(type,data,editItem?.id);
@@ -246,6 +254,12 @@ function ItemModal({
             <div><label className={labelCls}>Forma de pago</label>
               <select className={inputCls} value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value)}>
                 {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+
+            <div><label className={labelCls}>Pertenece a</label>
+              <select className={inputCls} value={entity} onChange={e=>setEntity(e.target.value)}>
+                {ENTITIES.map(e=><option key={e} value={e}>{e.charAt(0).toUpperCase()+e.slice(1)}</option>)}
               </select>
             </div>
 
@@ -528,6 +542,11 @@ export default function FinancesPage() {
                       {/* Description */}
                       <div className="min-w-0">
                         <p className={`text-sm font-medium truncate ${item.paid?"line-through":""}`}>{item.description}</p>
+                        {item.entity && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text} md:hidden`}>
+                            {item.entity}
+                          </span>
+                        )}
                       </div>
 
                       {/* Amount */}
@@ -557,10 +576,17 @@ export default function FinancesPage() {
                         {stCfg.emoji}
                       </button>
 
-                      {/* Type */}
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tColors.bg} ${tColors.text} hidden md:inline`}>
-                        {TYPE_LABELS[item.type][0]}
-                      </span>
+                      {/* Type + Entity */}
+                      <div className="hidden md:flex flex-col gap-0.5 items-start">
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tColors.bg} ${tColors.text}`}>
+                          {TYPE_LABELS[item.type][0]}
+                        </span>
+                        {item.entity && item.entity !== "personal" && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text}`}>
+                            {item.entity}
+                          </span>
+                        )}
+                      </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-1">
