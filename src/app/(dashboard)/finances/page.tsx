@@ -517,10 +517,17 @@ export default function FinancesPage() {
             />
 
             {/* Table header */}
-            <div className="hidden md:grid grid-cols-[60px_1fr_100px_100px_80px_80px_80px_70px_40px_40px] gap-2 px-4 py-2 text-xs text-muted-foreground border-b border-border">
-              <span>Fecha</span><span>Descripción</span><span>Monto</span><span>≈ Conv.</span>
-              <span>Categoría</span><span>Pago</span><span>Vence</span><span>Estado</span>
-              <span>Tipo</span><span></span>
+            <div className="hidden md:grid grid-cols-[60px_1fr_100px_100px_80px_80px_80px_70px_40px_40px] px-0 py-2 text-xs text-muted-foreground border-b-2 border-border/60 bg-zinc-800/30">
+              <span className="px-3 border-r border-border/40">Fecha</span>
+              <span className="px-3 border-r border-border/40">Descripción</span>
+              <span className="px-3 border-r border-border/40">Monto</span>
+              <span className="px-3 border-r border-border/40">≈ Conv.</span>
+              <span className="px-3 border-r border-border/40">Categoría</span>
+              <span className="px-3 border-r border-border/40">Pago</span>
+              <span className="px-3 border-r border-border/40">Vence</span>
+              <span className="px-3 border-r border-border/40">Estado</span>
+              <span className="px-3 border-r border-border/40">Tipo</span>
+              <span className="px-3"></span>
             </div>
 
             <div className="divide-y divide-border">
@@ -534,13 +541,13 @@ export default function FinancesPage() {
                   const catColor=CATEGORY_COLORS[item.category||"otros"]||(categories.find(c=>c.name===item.category)?.color)||"#94A3B8";
                   return (
                     <div key={`${item.type}-${item.id}`}
-                      className={`grid grid-cols-1 md:grid-cols-[60px_1fr_100px_100px_80px_80px_80px_70px_40px_40px] gap-2 items-center px-4 py-2.5 hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
+                      className={`grid grid-cols-1 md:grid-cols-[60px_1fr_100px_100px_80px_80px_80px_70px_40px_40px] items-center px-0 py-2.5 hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
 
                       {/* Date */}
-                      <span className="text-xs font-mono text-muted-foreground">{fmtDate(item.dueDate||item.fullDate)}</span>
+                      <span className="text-xs font-mono text-muted-foreground px-3 border-r border-border/30">{fmtDate(item.dueDate||item.fullDate)}</span>
 
                       {/* Description */}
-                      <div className="min-w-0">
+                      <div className="min-w-0 px-3 border-r border-border/30">
                         <p className={`text-sm font-medium truncate ${item.paid?"line-through":""}`}>{item.description}</p>
                         {item.entity && (
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text} md:hidden`}>
@@ -550,34 +557,36 @@ export default function FinancesPage() {
                       </div>
 
                       {/* Amount */}
-                      <span className={`text-sm font-semibold ${tColors.text}`}>
+                      <span className={`text-sm font-semibold ${tColors.text} px-3 border-r border-border/30`}>
                         {item.type==="income"?"+":"-"}{fmt(item.amount,item.currency)}
                       </span>
 
                       {/* Converted */}
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground px-3 border-r border-border/30">
                         ≈ {fmt(item.amountConverted,item.convertedCurrency)}
                       </span>
 
                       {/* Category */}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 px-3 border-r border-border/30">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{backgroundColor:catColor}}/>
                         <span className="text-xs truncate">{item.category||"—"}</span>
                       </div>
 
                       {/* Payment */}
-                      <span className="text-xs text-muted-foreground capitalize">{item.paymentMethod||"—"}</span>
+                      <span className="text-xs text-muted-foreground capitalize px-3 border-r border-border/30">{item.paymentMethod||"—"}</span>
 
                       {/* Due date */}
-                      <span className="text-xs text-muted-foreground">{fmtDate(item.dueDate)}</span>
+                      <span className="text-xs text-muted-foreground px-3 border-r border-border/30">{fmtDate(item.dueDate)}</span>
 
                       {/* Status */}
-                      <button onClick={()=>togglePaid(item)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors ${stCfg.cls}`}>
-                        {stCfg.emoji}
-                      </button>
+                      <div className="px-3 border-r border-border/30 flex items-center">
+                        <button onClick={()=>togglePaid(item)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors ${stCfg.cls}`}>
+                          {stCfg.emoji}
+                        </button>
+                      </div>
 
                       {/* Type + Entity */}
-                      <div className="hidden md:flex flex-col gap-0.5 items-start">
+                      <div className="hidden md:flex flex-col gap-0.5 items-start px-3 border-r border-border/30">
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tColors.bg} ${tColors.text}`}>
                           {TYPE_LABELS[item.type][0]}
                         </span>
@@ -589,7 +598,7 @@ export default function FinancesPage() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 px-3">
                         {item.receiptUrl&&<a href={item.receiptUrl} target="_blank" rel="noopener"><Paperclip className="h-3.5 w-3.5 text-primary"/></a>}
                         <button onClick={()=>openEdit(item)} className="hover:text-primary"><Pencil className="h-3.5 w-3.5"/></button>
                       </div>
