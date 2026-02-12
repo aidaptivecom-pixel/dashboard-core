@@ -28,6 +28,10 @@ export function useAuth() {
         setUser(session?.user ?? null);
         setLoading(false);
         
+        if (event === 'SIGNED_IN') {
+          router.push('/');
+          router.refresh();
+        }
         if (event === 'SIGNED_OUT') {
           router.push('/login');
         }
