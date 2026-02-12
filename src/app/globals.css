@@ -25,23 +25,23 @@
   }
 
   .dark {
-    --background: 220 15% 8%;
-    --foreground: 220 13% 95%;
-    --card: 220 15% 10%;
-    --card-foreground: 220 13% 95%;
+    --background: 30 3% 12%;
+    --foreground: 30 5% 90%;
+    --card: 30 3% 14%;
+    --card-foreground: 30 5% 90%;
     --primary: 230 80% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 15% 15%;
-    --secondary-foreground: 220 13% 95%;
-    --muted: 220 15% 15%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 220 15% 15%;
-    --accent-foreground: 220 13% 95%;
-    --border: 220 15% 18%;
+    --secondary: 30 3% 18%;
+    --secondary-foreground: 30 5% 90%;
+    --muted: 30 3% 18%;
+    --muted-foreground: 30 3% 55%;
+    --accent: 30 3% 18%;
+    --accent-foreground: 30 5% 90%;
+    --border: 30 3% 20%;
     --ring: 230 80% 60%;
     
-    /* App background - deep dark blue-ish */
-    --app-bg: 220 20% 5%;
+    /* App background - warm dark grey like Claude */
+    --app-bg: 30 3% 10%;
   }
 }
 
