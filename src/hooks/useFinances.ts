@@ -351,24 +351,24 @@ export function useFinances() {
 
   const insertItem = useCallback(async (type: ItemType, data: Record<string, unknown>) => {
     const supabase = createClient();
-    if (type === "expense") {
-      await supabase.from("financial_expenses").insert(data);
-    } else if (type === "income") {
-      await supabase.from("financial_income").insert(data);
-    } else {
-      await supabase.from("financial_debts").insert(data);
+    const table = type === "expense" ? "financial_expenses" : type === "income" ? "financial_income" : "financial_debts";
+    const { error } = await supabase.from(table).insert(data);
+    if (error) {
+      console.error("Insert error:", error);
+      alert(`Error al guardar: ${error.message}`);
+      return;
     }
     await fetchData();
   }, [fetchData]);
 
   const updateItem = useCallback(async (type: ItemType, id: string, data: Record<string, unknown>) => {
     const supabase = createClient();
-    if (type === "expense") {
-      await supabase.from("financial_expenses").update(data).eq("id", id);
-    } else if (type === "income") {
-      await supabase.from("financial_income").update(data).eq("id", id);
-    } else {
-      await supabase.from("financial_debts").update(data).eq("id", id);
+    const table = type === "expense" ? "financial_expenses" : type === "income" ? "financial_income" : "financial_debts";
+    const { error } = await supabase.from(table).update(data).eq("id", id);
+    if (error) {
+      console.error("Update error:", error);
+      alert(`Error al actualizar: ${error.message}`);
+      return;
     }
     await fetchData();
   }, [fetchData]);

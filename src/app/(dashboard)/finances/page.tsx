@@ -133,6 +133,8 @@ function ItemModal({
   const [recurrent,setRecurrent]=useState(editItem?.recurrent||false);
   const [entity,setEntity]=useState(editItem?.entity||"personal");
   const [receiptUrl,setReceiptUrl]=useState(editItem?.receiptUrl||"");
+  const [paymentType,setPaymentType]=useState<"total"|"partial">("total");
+  const [amountPaid,setAmountPaid]=useState("");
   const [uploading,setUploading]=useState(false);
   const [saving,setSaving]=useState(false);
   const [catModalOpen,setCatModalOpen]=useState(false);
@@ -149,6 +151,7 @@ function ItemModal({
       setPaymentMethod(editItem.paymentMethod||"transferencia");
       setRecurrent(editItem.recurrent||false);
       setEntity(editItem.entity||"personal");
+      setPaymentType("total");setAmountPaid("");
       setReceiptUrl(editItem.receiptUrl||"");
     } else {
       setType("expense");setDesc("");setAmount("");setCurrency("ARS");
@@ -179,6 +182,8 @@ function ItemModal({
       data.name=desc;data.amount=Number(amount);data.currency=currency;
       data.category=category;data.payment_method=paymentMethod;
       data.recurrent=recurrent;data.active=true;data.entity=entity;
+      data.paid=paymentType==="total"&&!!paidDate;
+      if(paymentType==="partial"){data.paid=false;data.notes=`Parcial: pagado ${currency==="USD"?"US$":"$"}${amountPaid} de ${currency==="USD"?"US$":"$"}${amount}`;}
       data.due_date=dueDate||null;data.receipt_url=receiptUrl||null;
       data.paid_date=paidDate||null;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
@@ -186,13 +191,16 @@ function ItemModal({
       data.source=desc;data.amount=Number(amount);data.currency=currency;
       data.category=category;data.payment_method=paymentMethod;
       data.expected_date=dueDate||null;data.receipt_url=receiptUrl||null;
-      data.paid_date=paidDate||null;data.status="expected";data.probability="high";data.entity=entity;
+      data.paid_date=paidDate||null;data.status=paidDate?"received":"expected";data.probability="high";data.entity=entity;
+      data.paid=paymentType==="total"&&!!paidDate;
+      if(paymentType==="partial"){data.paid=false;data.notes=`Parcial: cobrado ${currency==="USD"?"US$":"$"}${amountPaid} de ${currency==="USD"?"US$":"$"}${amount}`;}
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     } else {
-      data.description=desc;data.total_amount=Number(amount);data.amount_paid=0;
+      data.description=desc;data.total_amount=Number(amount);
+      data.amount_paid=paymentType==="partial"?Number(amountPaid||0):0;
       data.currency=currency;data.due_date=dueDate||null;
       data.payment_method=paymentMethod;data.receipt_url=receiptUrl||null;
-      data.status="pending";data.priority="medium";data.entity=entity;
+      data.status=paymentType==="total"&&paidDate?"paid":"pending";data.priority="medium";data.entity=entity;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     }
     await onSave(type,data,editItem?.id);
@@ -236,6 +244,31 @@ function ItemModal({
                   {currency}
                 </button>
               </div>
+            </div>
+
+            <div className="flex gap-3 items-end">
+              <div className="flex-1">
+                <label className={labelCls}>Tipo de pago</label>
+                <div className="flex gap-2">
+                  <button onClick={()=>setPaymentType("total")}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${paymentType==="total"?"bg-primary/20 text-primary":"bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>
+                    Total
+                  </button>
+                  <button onClick={()=>setPaymentType("partial")}
+                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${paymentType==="partial"?"bg-amber-500/20 text-amber-400":"bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>
+                    Parcial
+                  </button>
+                </div>
+              </div>
+              {paymentType==="partial"&&(
+                <div className="flex-1">
+                  <label className={labelCls}>Monto pagado</label>
+                  <input className={inputCls} type="number" value={amountPaid} onChange={e=>setAmountPaid(e.target.value)} placeholder="0"/>
+                  {amount&&amountPaid&&Number(amountPaid)<Number(amount)&&(
+                    <p className="text-xs text-amber-400 mt-1">Resta: {currency==="USD"?"US$ ":"$ "}{(Number(amount)-Number(amountPaid)).toLocaleString("es-AR")}</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-3">
