@@ -572,7 +572,7 @@ function FilterBar({
 }){
   const selectCls="bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-primary";
   return (
-    <div className="flex flex-wrap items-center gap-2 p-3 border-b border-border">
+    <div className="flex items-center gap-2 p-3 border-b border-border overflow-x-auto">
       <Filter className="h-4 w-4 text-muted-foreground"/>
       <button onClick={()=>setExcludeDebts(!excludeDebts)}
         className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${excludeDebts?"bg-amber-500/20 text-amber-400 border border-amber-500/30":"bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700"}`}>
@@ -684,51 +684,51 @@ export default function FinancesPage() {
   }
 
   return (
-    <div className="mx-[25px]">
+    <div className="mx-3 sm:mx-[25px] pb-20">
       {/* Header */}
-      <motion.div className="flex items-center justify-between mb-6" initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}>
+      <motion.div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6" initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}>
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-3">
-            <Wallet className="h-7 w-7 text-primary"/>Finanzas
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <Wallet className="h-6 w-6 text-primary"/>Finanzas
           </h1>
           <EditableDollar value={blueRate} onChange={updateBlueRate}/>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button onClick={openNew}
-            className="flex items-center gap-1.5 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors">
+            className="flex items-center gap-1.5 bg-primary text-primary-foreground px-3 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors">
             <Plus className="h-4 w-4"/>Agregar
           </button>
-          <div className="flex items-center gap-2 bg-card border border-border rounded-xl px-2 py-1">
+          <div className="flex items-center gap-1 bg-card border border-border rounded-xl px-1.5 py-1">
             <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-accent transition-colors"><ChevronLeft className="h-4 w-4"/></button>
-            <span className="text-sm font-medium min-w-[120px] text-center">{MONTH_NAMES[selectedMonth.month]} {selectedMonth.year}</span>
+            <span className="text-xs sm:text-sm font-medium min-w-[100px] text-center">{MONTH_NAMES[selectedMonth.month]} {selectedMonth.year}</span>
             <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-accent transition-colors"><ChevronRight className="h-4 w-4"/></button>
           </div>
         </div>
       </motion.div>
 
       {/* Summary Cards */}
-      <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.1}}>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><TrendingDown className="h-4 w-4 text-rose-400"/>Gastos mensuales</div>
-          <p className="text-xl font-bold text-rose-400">{fmtARS(totalExpensesARS)}</p>
+      <motion.div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.1}}>
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mb-1.5"><TrendingDown className="h-3.5 w-3.5 text-rose-400"/>Gastos mensuales</div>
+          <p className="text-base sm:text-xl font-bold text-rose-400">{fmtShort(totalExpensesARS)}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><Wallet className="h-4 w-4 text-sky-400"/>Gastos pagados</div>
-          <p className="text-xl font-bold text-sky-400">{fmtARS(displayPaidARS)}</p>
-          {totalExpensesARS > 0 && <p className="text-xs text-muted-foreground mt-1">{Math.round((displayPaidARS / (totalExpensesARS + displayDebtsARS || 1)) * 100)}% del total</p>}
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mb-1.5"><Wallet className="h-3.5 w-3.5 text-sky-400"/>Gastos pagados</div>
+          <p className="text-base sm:text-xl font-bold text-sky-400">{fmtShort(displayPaidARS)}</p>
+          {totalExpensesARS > 0 && <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{Math.round((displayPaidARS / (totalExpensesARS + displayDebtsARS || 1)) * 100)}% del total</p>}
         </div>
-        <div className={`rounded-xl border bg-card p-4 ${excludeDebts ? "border-zinc-600 opacity-40" : "border-border"}`}>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><AlertCircle className="h-4 w-4 text-amber-400"/>Deudas del mes</div>
-          <p className="text-xl font-bold text-amber-400">{fmtARS(displayDebtsARS)}</p>
-          {excludeDebts && <p className="text-xs text-zinc-500 mt-1">Excluidas</p>}
+        <div className={`rounded-xl border bg-card p-3 sm:p-4 ${excludeDebts ? "border-zinc-600 opacity-40" : "border-border"}`}>
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mb-1.5"><AlertCircle className="h-3.5 w-3.5 text-amber-400"/>Deudas del mes</div>
+          <p className="text-base sm:text-xl font-bold text-amber-400">{fmtShort(displayDebtsARS)}</p>
+          {excludeDebts && <p className="text-[10px] text-zinc-500 mt-1">Excluidas</p>}
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><TrendingUp className="h-4 w-4 text-emerald-400"/>Ingresos esperados</div>
-          <p className="text-xl font-bold text-emerald-400">{fmtARS(totalIncomeARS)}</p>
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4">
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mb-1.5"><TrendingUp className="h-3.5 w-3.5 text-emerald-400"/>Ingresos esperados</div>
+          <p className="text-base sm:text-xl font-bold text-emerald-400">{fmtShort(totalIncomeARS)}</p>
         </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2"><span className="text-base">{semaphoreIcon}</span>Balance</div>
-          <p className={`text-xl font-bold ${gap>=0?"text-emerald-400":"text-rose-400"}`}>{fmtARS(gap)}</p>
+        <div className="rounded-xl border border-border bg-card p-3 sm:p-4 col-span-2 lg:col-span-1">
+          <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground mb-1.5"><span className="text-sm">{semaphoreIcon}</span>Balance</div>
+          <p className={`text-base sm:text-xl font-bold ${gap>=0?"text-emerald-400":"text-rose-400"}`}>{fmtShort(gap)}</p>
         </div>
       </motion.div>
 
@@ -783,7 +783,36 @@ export default function FinancesPage() {
 
                   return (
                     <div key={`${item.type}-${item.id}`}
-                      className={`grid grid-cols-1 md:grid-cols-[70px_1fr_110px_110px_100px_100px_110px_90px_65px_55px_36px] items-center px-0 py-2.5 hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
+                      className={`hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
+                    {/* Mobile card view */}
+                    <div className="md:hidden p-3 flex items-center gap-3" onClick={()=>openEdit(item)}>
+                      <button
+                        onClick={(e)=>{e.stopPropagation();if(item.payments.length > 0 && item.totalPaid < totalAmount && !item.paid) return;togglePaid(item);}}
+                        className={`flex-shrink-0 text-xs px-2 py-1 rounded-full ${STATUS_CONFIG[getItemStatus(item)].cls}`}>
+                        {STATUS_CONFIG[getItemStatus(item)].emoji}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <span className={`text-[10px] px-1 py-0.5 rounded ${TYPE_COLORS[item.type].bg} ${TYPE_COLORS[item.type].text}`}>{TYPE_SHORT[item.type]}</span>
+                          <p className={`text-sm font-medium truncate ${item.paid?"line-through":""}`}>{item.description}</p>
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-[10px] text-muted-foreground">{fmtDate(item.dueDate)}</span>
+                          {item.entity && item.entity !== "personal" && (
+                            <span className={`text-[9px] px-1 py-0.5 rounded-full ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text}`}>{item.entity}</span>
+                          )}
+                          {item.interest?.has_interest && (
+                            <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/15 text-red-400">📈 {item.interest.rate}%</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className={`text-sm font-semibold ${TYPE_COLORS[item.type].text}`}>{item.type==="income"?"+":"-"}{fmt(totalAmount,item.currency)}</p>
+                        {hasPartialPayments && <p className="text-[10px] text-amber-400">{fmtShort(item.totalPaid,item.currency)} pagado</p>}
+                      </div>
+                    </div>
+                    {/* Desktop grid view */}
+                    <div className={`hidden md:grid grid-cols-[70px_1fr_110px_110px_100px_100px_110px_90px_65px_55px_36px] items-center px-0 py-2.5`}>
 
                       {/* 1. Fecha */}
                       <span className="text-xs font-mono text-muted-foreground px-3 border-r border-border/30">{fmtDate(item.paidDate||item.dueDate||item.fullDate)}</span>
@@ -876,6 +905,7 @@ export default function FinancesPage() {
                         {item.receiptUrl&&<a href={item.receiptUrl} target="_blank" rel="noopener"><Paperclip className="h-3.5 w-3.5 text-primary"/></a>}
                         <button onClick={()=>openEdit(item)} className="hover:text-primary"><Pencil className="h-3.5 w-3.5"/></button>
                       </div>
+                    </div>
                     </div>
                   );
                 })
