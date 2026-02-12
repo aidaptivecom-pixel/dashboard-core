@@ -589,16 +589,18 @@ export default function FinancesPage() {
   });
 
   const handleSave = async (type: ItemType, data: Record<string, unknown>, editId?: string) => {
+    const partialAmount = data._partialAmount;
+    delete data._partialAmount;
     if (editId) {
       await updateItem(type, editId, data);
     } else {
       const inserted = await insertItem(type, data);
       // If partial payment on create, register the initial payment
-      if (inserted && data._partialAmount) {
+      if (inserted && partialAmount) {
         await addPayment(
           inserted.id,
           type,
-          Number(data._partialAmount),
+          Number(partialAmount),
           (data.currency as "ARS" | "USD") || "ARS",
           new Date().toISOString().split("T")[0],
           (data.payment_method as string) || "transferencia"
