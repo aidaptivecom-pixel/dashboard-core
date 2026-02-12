@@ -22,12 +22,16 @@ import {
 import {
   useFinances,
   getItemStatus,
+  parseDebtInterest,
+  serializeDebtInterest,
+  getCleanNotes,
   type UnifiedItem,
   type ItemType,
   type StatusFilter,
   type SortField,
   type Category,
   type Payment,
+  type DebtInterest,
 } from "@/hooks/useFinances";
 
 /* ─── Constants ─── */
@@ -246,6 +250,11 @@ function ItemModal({
   const [uploading,setUploading]=useState(false);
   const [saving,setSaving]=useState(false);
   const [catModalOpen,setCatModalOpen]=useState(false);
+  // Interest fields (debts only)
+  const editInterest = editItem ? parseDebtInterest((editItem.rawItem as {notes:string|null}).notes) : null;
+  const [hasInterest,setHasInterest]=useState(editInterest?.has_interest||false);
+  const [interestRate,setInterestRate]=useState(editInterest?.rate?String(editInterest.rate):"");
+  const [interestType,setInterestType]=useState<"monthly"|"annual">(editInterest?.type||"monthly");
 
   const reset=useCallback(()=>{
     if(editItem){
@@ -261,11 +270,16 @@ function ItemModal({
       setEntity(editItem.entity||"personal");
       setPaymentType("total");setAmountPaid("");
       setReceiptUrl(editItem.receiptUrl||"");
+      const ei = parseDebtInterest((editItem.rawItem as {notes:string|null}).notes);
+      setHasInterest(ei?.has_interest||false);
+      setInterestRate(ei?.rate?String(ei.rate):"");
+      setInterestType(ei?.type||"monthly");
     } else {
       setType("expense");setDesc("");setAmount("");setCurrency("ARS");
       setPaidDate("");setDueDate("");setCategory("otros");
       setPaymentMethod("transferencia");setRecurrent(false);setReceiptUrl("");
       setPaymentType("total");setAmountPaid("");setEntity("personal");
+      setHasInterest(false);setInterestRate("");setInterestType("monthly");
     }
   },[editItem]);
 
@@ -307,6 +321,10 @@ function ItemModal({
       data.currency=currency;data.due_date=dueDate||null;
       data.payment_method=paymentMethod;data.receipt_url=receiptUrl||null;
       data.status="pending";data.priority="medium";data.entity=entity;
+      // Serialize interest into notes
+      const interestData: DebtInterest | null = hasInterest && interestRate ? {has_interest: true, rate: Number(interestRate), type: interestType} : null;
+      const existingNotes = isEdit ? getCleanNotes((editItem?.rawItem as {notes:string|null}).notes) : "";
+      data.notes = serializeDebtInterest(existingNotes, interestData) || null;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     }
     // Pass partial amount info for create
@@ -420,6 +438,31 @@ function ItemModal({
                   className="rounded border-zinc-600 bg-zinc-800"/>
                 Recurrente
               </label>
+            )}
+
+            {type==="debt"&&(
+              <div className="space-y-2 bg-zinc-800/30 rounded-lg p-3">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={hasInterest} onChange={e=>setHasInterest(e.target.checked)}
+                    className="rounded border-zinc-600 bg-zinc-800"/>
+                  Genera intereses
+                </label>
+                {hasInterest&&(
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className={labelCls}>Tasa (%)</label>
+                      <input className={inputCls} type="number" step="0.1" value={interestRate} onChange={e=>setInterestRate(e.target.value)} placeholder="Ej: 5"/>
+                    </div>
+                    <div className="flex-1">
+                      <label className={labelCls}>Tipo</label>
+                      <select className={inputCls} value={interestType} onChange={e=>setInterestType(e.target.value as "monthly"|"annual")}>
+                        <option value="monthly">Mensual</option>
+                        <option value="annual">Anual</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             <div><label className={labelCls}>Comprobante</label>
@@ -740,7 +783,17 @@ export default function FinancesPage() {
 
                       {/* 2. Descripción */}
                       <div className="min-w-0 px-3 border-r border-border/30">
-                        <p className={`text-sm font-medium truncate ${item.paid?"line-through":""}`}>{item.description}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-sm font-medium truncate ${item.paid?"line-through":""}`}>{item.description}</p>
+                          {item.interest?.has_interest && (
+                            <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/15 text-red-400 whitespace-nowrap" title={`${item.interest.rate}% ${item.interest.type === "monthly" ? "mensual" : "anual"}`}>
+                              📈 {item.interest.rate}% {item.interest.type === "monthly" ? "m" : "a"}
+                            </span>
+                          )}
+                          {item.convertedFromExpense && (
+                            <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/15 text-amber-400">auto</span>
+                          )}
+                        </div>
                         {item.entity && (
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text} md:hidden`}>
                             {item.entity}
@@ -748,10 +801,13 @@ export default function FinancesPage() {
                         )}
                       </div>
 
-                      {/* 3. Monto (total original) */}
-                      <span className={`text-sm font-semibold ${tColors.text} px-3 border-r border-border/30`}>
-                        {item.type==="income"?"+":"-"}{fmt(totalAmount,item.currency)}
-                      </span>
+                      {/* 3. Monto (total original + interest) */}
+                      <div className={`text-sm font-semibold ${tColors.text} px-3 border-r border-border/30`}>
+                        <span>{item.type==="income"?"+":"-"}{fmt(totalAmount,item.currency)}</span>
+                        {item.amountWithInterest && item.amountWithInterest > totalAmount + 1 && (
+                          <p className="text-[10px] text-red-400 font-normal">con interés: {fmt(Math.round(item.amountWithInterest),item.currency)}</p>
+                        )}
+                      </div>
 
                       {/* 4. Pago parcial */}
                       <span className="text-xs px-3 border-r border-border/30">

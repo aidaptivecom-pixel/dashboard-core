@@ -32,6 +32,12 @@ export interface Expense {
   entity: string | null;
 }
 
+export interface DebtInterest {
+  has_interest: boolean;
+  rate: number; // percentage
+  type: "monthly" | "annual";
+}
+
 export interface Debt {
   id: string;
   description: string;
@@ -46,6 +52,45 @@ export interface Debt {
   payment_method: string | null;
   receipt_url: string | null;
   entity: string | null;
+  // Interest stored as JSON in notes field with prefix __INTEREST__
+}
+
+export function parseDebtInterest(notes: string | null): DebtInterest | null {
+  if (!notes) return null;
+  const match = notes.match(/__INTEREST__({.*?})__END_INTEREST__/);
+  if (!match) return null;
+  try { return JSON.parse(match[1]); } catch { return null; }
+}
+
+export function serializeDebtInterest(notes: string | null, interest: DebtInterest | null): string {
+  const clean = (notes || "").replace(/__INTEREST__.*?__END_INTEREST__/g, "").trim();
+  if (!interest || !interest.has_interest) return clean;
+  return `${clean} __INTEREST__${JSON.stringify(interest)}__END_INTEREST__`.trim();
+}
+
+export function getCleanNotes(notes: string | null): string {
+  if (!notes) return "";
+  return notes.replace(/__INTEREST__.*?__END_INTEREST__/g, "").trim();
+}
+
+export function calcDebtWithInterest(debt: Debt): number {
+  const interest = parseDebtInterest(debt.notes);
+  if (!interest || !interest.has_interest || !interest.rate || !debt.due_date) return debt.total_amount;
+  
+  const dueDate = new Date(debt.due_date + "T00:00:00");
+  const now = new Date();
+  if (now <= dueDate) return debt.total_amount; // no interest yet
+  
+  const msPerMonth = 30.44 * 24 * 60 * 60 * 1000;
+  const monthsOverdue = Math.max(0, (now.getTime() - dueDate.getTime()) / msPerMonth);
+  
+  if (interest.type === "monthly") {
+    return debt.total_amount * Math.pow(1 + interest.rate / 100, monthsOverdue);
+  } else {
+    // annual rate, compound monthly
+    const monthlyRate = interest.rate / 100 / 12;
+    return debt.total_amount * Math.pow(1 + monthlyRate, monthsOverdue);
+  }
 }
 
 export interface Income {
@@ -105,6 +150,9 @@ export interface UnifiedItem {
   rawItem: Expense | Debt | Income;
   totalPaid: number;
   payments: Payment[];
+  interest?: DebtInterest | null;
+  amountWithInterest?: number;
+  convertedFromExpense?: boolean;
 }
 
 function toARS(amount: number, currency: string, rate: number): number {
@@ -191,9 +239,58 @@ export function useFinances() {
     setLoading(false);
   }, []);
 
+  // Auto-convert expenses overdue > 30 days to debts
+  const autoConvertOverdue = useCallback(async () => {
+    const supabase = createClient();
+    const now = new Date();
+    const threshold = new Date(now);
+    threshold.setDate(threshold.getDate() - 30);
+
+    const overdue = expenses.filter((e) => {
+      if (e.paid) return false;
+      if (!e.due_date) return false;
+      const due = new Date(e.due_date + "T00:00:00");
+      return due < threshold;
+    });
+
+    for (const exp of overdue) {
+      // Create debt from expense
+      await supabase.from("financial_debts").insert({
+        user_id: "d1b09b1a-919e-43fa-b70b-19b0be37cabe",
+        description: `[Auto] ${exp.name}`,
+        total_amount: exp.amount,
+        amount_paid: 0,
+        currency: exp.currency,
+        due_date: exp.due_date,
+        status: "pending",
+        priority: "high",
+        creditor: null,
+        notes: `Convertido automáticamente de gasto vencido (${exp.due_date})`,
+        payment_method: exp.payment_method,
+        receipt_url: exp.receipt_url,
+        entity: exp.entity,
+      });
+
+      // Deactivate the original expense
+      await supabase.from("financial_expenses").update({ active: false }).eq("id", exp.id);
+    }
+
+    if (overdue.length > 0) {
+      await fetchData();
+    }
+  }, [expenses, fetchData]);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Run auto-convert after data loads
+  useEffect(() => {
+    if (!loading && expenses.length > 0) {
+      autoConvertOverdue();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   // Build payment lookup map
   const paymentsByItem = useMemo(() => {
@@ -296,12 +393,14 @@ export function useFinances() {
     });
 
     monthDebts.forEach((d) => {
-      const remaining = d.total_amount - d.amount_paid;
+      const interest = parseDebtInterest(d.notes);
+      const amountWithInterest = calcDebtWithInterest(d);
+      const remaining = amountWithInterest - d.amount_paid;
       const arsAmt = toARS(remaining, d.currency, blueRate);
       const day = d.due_date ? new Date(d.due_date + "T00:00:00").getDate() : null;
       const itemPayments = paymentsByItem[d.id] || [];
       const tp = itemPayments.reduce((s, p) => s + Number(p.amount), 0);
-      const isPaid = tp >= d.total_amount ? true : d.status === "paid";
+      const isPaid = tp >= amountWithInterest ? true : d.status === "paid";
       items.push({
         id: d.id,
         date: day,
@@ -322,6 +421,8 @@ export function useFinances() {
         rawItem: d,
         totalPaid: tp,
         payments: itemPayments,
+        interest,
+        amountWithInterest,
       });
     });
 
