@@ -489,7 +489,7 @@ export default function FinancesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="mx-[25px]">
       {/* Header */}
       <motion.div className="flex items-center justify-between mb-6" initial={{opacity:0,y:-20}} animate={{opacity:1,y:0}}>
         <div>
