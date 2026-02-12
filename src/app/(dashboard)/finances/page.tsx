@@ -439,8 +439,8 @@ export default function FinancesPage() {
   const {
     loading, selectedMonth, setSelectedMonth,
     totalExpensesARS, totalDebtsARS, totalIncomeARS,
-    gap, semaphore, filteredItems, categoryBreakdown,
-    monthDebts, blueRate, updateBlueRate, categories,
+    gap, semaphore, filteredItems,
+    blueRate, updateBlueRate, categories,
     statusFilter, setStatusFilter, typeFilter, setTypeFilter,
     categoryFilter, setCategoryFilter, paymentFilter, setPaymentFilter,
     sortField, setSortField, togglePaid, insertItem, updateItem,
@@ -478,7 +478,7 @@ export default function FinancesPage() {
   };
 
   const semaphoreIcon = semaphore === "green" ? "🟢" : semaphore === "yellow" ? "🟡" : "🔴";
-  const maxCatVal = categoryBreakdown.length > 0 ? categoryBreakdown[0].value : 1;
+  // category breakdown moved to general page
 
   if (loading) {
     return (
@@ -531,9 +531,9 @@ export default function FinancesPage() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Table */}
-        <motion.div className="lg:col-span-2" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.2}}>
+        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.2}}>
           <div className="rounded-xl border border-border bg-card">
             <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="font-semibold flex items-center gap-2"><CircleDollarSign className="h-5 w-5 text-primary"/>Movimientos</h2>
@@ -643,58 +643,6 @@ export default function FinancesPage() {
           </div>
         </motion.div>
 
-        {/* Right Column */}
-        <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:0.3}}>
-          {/* Debts */}
-          {monthDebts.length>0&&(
-            <div className="rounded-xl border border-border bg-card">
-              <div className="p-4 border-b border-border">
-                <h2 className="font-semibold flex items-center gap-2 text-sm"><AlertCircle className="h-4 w-4 text-amber-400"/>Deudas</h2>
-              </div>
-              <div className="p-4 space-y-4">
-                {monthDebts.map(d=>{
-                  const progress=d.total_amount>0?(d.amount_paid/d.total_amount)*100:0;
-                  return (
-                    <div key={d.id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-sm font-medium truncate">{d.description}</p>
-                        <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                          {fmt(d.amount_paid,d.currency)} / {fmt(d.total_amount,d.currency)}
-                        </span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-amber-400 rounded-full transition-all" style={{width:`${progress}%`}}/>
-                      </div>
-                      {d.due_date&&<p className="text-xs text-muted-foreground mt-1">Vence: {new Date(d.due_date+"T00:00:00").toLocaleDateString("es-AR")}</p>}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Category Breakdown */}
-          <div className="rounded-xl border border-border bg-card">
-            <div className="p-4 border-b border-border"><h2 className="font-semibold text-sm">Gastos por categoría</h2></div>
-            <div className="p-4 space-y-3">
-              {categoryBreakdown.map(cat=>{
-                const pct=(cat.value/maxCatVal)*100;
-                const color=CATEGORY_COLORS[cat.name]||(categories.find(c=>c.name===cat.name)?.color)||"#94A3B8";
-                return (
-                  <div key={cat.name}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm capitalize">{cat.name}</span>
-                      <span className="text-xs text-muted-foreground">{fmtARS(cat.value)}</span>
-                    </div>
-                    <div className="h-2 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all" style={{width:`${pct}%`,backgroundColor:color}}/>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </motion.div>
       </div>
 
       {/* Modal */}
