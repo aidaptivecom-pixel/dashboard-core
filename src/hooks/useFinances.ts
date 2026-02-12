@@ -65,6 +65,19 @@ export interface Income {
   entity: string | null;
 }
 
+export interface Payment {
+  id: string;
+  user_id: string;
+  item_id: string;
+  item_type: "expense" | "income" | "debt";
+  amount: number;
+  currency: "ARS" | "USD";
+  payment_date: string;
+  payment_method: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
 export type ItemType = "expense" | "debt" | "income";
 export type StatusFilter = "all" | "paid" | "overdue" | "upcoming" | "ontime";
 export type SortField = "due_date" | "amount" | "paid_date";
@@ -90,6 +103,8 @@ export interface UnifiedItem {
   recurrent?: boolean;
   entity?: string | null;
   rawItem: Expense | Debt | Income;
+  totalPaid: number;
+  payments: Payment[];
 }
 
 function toARS(amount: number, currency: string, rate: number): number {
@@ -124,6 +139,7 @@ export function useFinances() {
   const [debts, setDebts] = useState<Debt[]>([]);
   const [income, setIncome] = useState<Income[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [blueRate, setBlueRate] = useState(() => {
     if (typeof window !== "undefined") {
@@ -154,22 +170,50 @@ export function useFinances() {
   const fetchData = useCallback(async () => {
     const supabase = createClient();
     setLoading(true);
-    const [expRes, debtRes, incRes, catRes] = await Promise.all([
+    const [expRes, debtRes, incRes, catRes, payRes] = await Promise.all([
       supabase.from("financial_expenses").select("*").eq("active", true),
       supabase.from("financial_debts").select("*"),
       supabase.from("financial_income").select("*"),
       supabase.from("financial_categories").select("*"),
+      supabase.from("financial_payments").select("*"),
     ]);
     if (expRes.data) setExpenses(expRes.data);
     if (debtRes.data) setDebts(debtRes.data);
     if (incRes.data) setIncome(incRes.data);
     if (catRes.data) setCategories(catRes.data);
+    if (payRes.error) {
+      console.error("Error fetching payments:", payRes.error);
+      setPayments([]);
+    } else {
+      setPayments(payRes.data || []);
+    }
     setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Build payment lookup map
+  const paymentsByItem = useMemo(() => {
+    const map: Record<string, Payment[]> = {};
+    payments.forEach((p) => {
+      if (!map[p.item_id]) map[p.item_id] = [];
+      map[p.item_id].push(p);
+    });
+    // Sort each by date
+    Object.values(map).forEach((arr) =>
+      arr.sort((a, b) => a.payment_date.localeCompare(b.payment_date))
+    );
+    return map;
+  }, [payments]);
+
+  const totalPaidForItem = useCallback(
+    (itemId: string): number => {
+      return (paymentsByItem[itemId] || []).reduce((sum, p) => sum + Number(p.amount), 0);
+    },
+    [paymentsByItem]
+  );
 
   const monthDebts = useMemo(
     () => debts.filter((d) => d.due_date && isInMonth(d.due_date, selectedMonth.year, selectedMonth.month)),
@@ -207,6 +251,9 @@ export function useFinances() {
 
     expenses.forEach((e) => {
       const arsAmt = toARS(e.amount, e.currency, blueRate);
+      const itemPayments = paymentsByItem[e.id] || [];
+      const tp = itemPayments.reduce((s, p) => s + Number(p.amount), 0);
+      const isPaid = tp >= e.amount ? true : (e.paid ?? false);
       items.push({
         id: e.id,
         date: e.due_day,
@@ -222,11 +269,13 @@ export function useFinances() {
         category: e.category,
         paymentMethod: e.payment_method,
         receiptUrl: e.receipt_url,
-        paid: e.paid ?? false,
+        paid: isPaid,
         paidDate: e.paid_date,
         recurrent: e.recurrent,
         entity: e.entity,
         rawItem: e,
+        totalPaid: tp,
+        payments: itemPayments,
       });
     });
 
@@ -234,6 +283,9 @@ export function useFinances() {
       const remaining = d.total_amount - d.amount_paid;
       const arsAmt = toARS(remaining, d.currency, blueRate);
       const day = d.due_date ? new Date(d.due_date + "T00:00:00").getDate() : null;
+      const itemPayments = paymentsByItem[d.id] || [];
+      const tp = itemPayments.reduce((s, p) => s + Number(p.amount), 0);
+      const isPaid = tp >= d.total_amount ? true : d.status === "paid";
       items.push({
         id: d.id,
         date: day,
@@ -249,15 +301,20 @@ export function useFinances() {
         status: d.status,
         paymentMethod: d.payment_method,
         receiptUrl: d.receipt_url,
-        paid: d.status === "paid",
+        paid: isPaid,
         entity: d.entity,
         rawItem: d,
+        totalPaid: tp,
+        payments: itemPayments,
       });
     });
 
     monthIncome.forEach((i) => {
       const arsAmt = toARS(i.amount, i.currency, blueRate);
       const day = i.expected_date ? new Date(i.expected_date + "T00:00:00").getDate() : null;
+      const itemPayments = paymentsByItem[i.id] || [];
+      const tp = itemPayments.reduce((s, p) => s + Number(p.amount), 0);
+      const isPaid = tp >= i.amount ? true : (i.paid ?? false);
       items.push({
         id: i.id,
         date: day,
@@ -274,15 +331,17 @@ export function useFinances() {
         status: i.status,
         paymentMethod: i.payment_method,
         receiptUrl: i.receipt_url,
-        paid: i.paid ?? false,
+        paid: isPaid,
         paidDate: i.paid_date,
         entity: i.entity,
         rawItem: i,
+        totalPaid: tp,
+        payments: itemPayments,
       });
     });
 
     return items;
-  }, [expenses, monthDebts, monthIncome, blueRate]);
+  }, [expenses, monthDebts, monthIncome, blueRate, paymentsByItem]);
 
   const filteredItems = useMemo(() => {
     let items = [...unifiedItems];
@@ -335,6 +394,11 @@ export function useFinances() {
 
   // CRUD operations
   const togglePaid = useCallback(async (item: UnifiedItem) => {
+    // Only allow toggling if fully paid via payments or no payments
+    if (item.payments.length > 0 && item.totalPaid < item.amount && !item.paid) {
+      alert("Este item tiene pagos parciales. Agregá pagos hasta completar el monto total.");
+      return;
+    }
     const supabase = createClient();
     const newPaid = !item.paid;
     const paidDate = newPaid ? new Date().toISOString().split("T")[0] : null;
@@ -352,13 +416,14 @@ export function useFinances() {
   const insertItem = useCallback(async (type: ItemType, data: Record<string, unknown>) => {
     const supabase = createClient();
     const table = type === "expense" ? "financial_expenses" : type === "income" ? "financial_income" : "financial_debts";
-    const { error } = await supabase.from(table).insert(data);
+    const { error, data: inserted } = await supabase.from(table).insert(data).select();
     if (error) {
       console.error("Insert error:", error);
       alert(`Error al guardar: ${error.message}`);
-      return;
+      return null;
     }
     await fetchData();
+    return inserted?.[0] || null;
   }, [fetchData]);
 
   const updateItem = useCallback(async (type: ItemType, id: string, data: Record<string, unknown>) => {
@@ -372,6 +437,70 @@ export function useFinances() {
     }
     await fetchData();
   }, [fetchData]);
+
+  // Payment operations
+  const addPayment = useCallback(async (
+    itemId: string,
+    itemType: ItemType,
+    amount: number,
+    currency: "ARS" | "USD",
+    paymentDate: string,
+    paymentMethod: string,
+    notes?: string
+  ) => {
+    const supabase = createClient();
+    const { error } = await supabase.from("financial_payments").insert({
+      user_id: "d1b09b1a-919e-43fa-b70b-19b0be37cabe",
+      item_id: itemId,
+      item_type: itemType,
+      amount,
+      currency,
+      payment_date: paymentDate,
+      payment_method: paymentMethod,
+      notes: notes || null,
+    });
+    if (error) {
+      console.error("Payment insert error:", error);
+      alert(`Error al registrar pago: ${error.message}`);
+      return;
+    }
+
+    // Check if item is now fully paid
+    const currentPaid = totalPaidForItem(itemId) + amount;
+    let itemTotal = 0;
+
+    if (itemType === "expense") {
+      const exp = expenses.find((e) => e.id === itemId);
+      if (exp) itemTotal = exp.amount;
+    } else if (itemType === "income") {
+      const inc = income.find((i) => i.id === itemId);
+      if (inc) itemTotal = inc.amount;
+    } else if (itemType === "debt") {
+      const debt = debts.find((d) => d.id === itemId);
+      if (debt) itemTotal = debt.total_amount;
+    }
+
+    if (currentPaid >= itemTotal && itemTotal > 0) {
+      const table = itemType === "expense" ? "financial_expenses" : itemType === "income" ? "financial_income" : "financial_debts";
+      if (itemType === "debt") {
+        const { error: upErr } = await supabase.from(table).update({ status: "paid" }).eq("id", itemId);
+        if (upErr) console.error("Auto-mark paid error:", upErr);
+      } else {
+        const paidDate = new Date().toISOString().split("T")[0];
+        const { error: upErr } = await supabase.from(table).update({ paid: true, paid_date: paidDate }).eq("id", itemId);
+        if (upErr) console.error("Auto-mark paid error:", upErr);
+      }
+    }
+
+    await fetchData();
+  }, [fetchData, totalPaidForItem, expenses, income, debts]);
+
+  const getPayments = useCallback(
+    (itemId: string): Payment[] => {
+      return paymentsByItem[itemId] || [];
+    },
+    [paymentsByItem]
+  );
 
   // Category CRUD
   const addCategory = useCallback(async (name: string, color: string) => {
@@ -415,6 +544,7 @@ export function useFinances() {
     debts,
     income,
     categories,
+    payments,
     monthDebts,
     monthIncome,
     loading,
@@ -450,6 +580,9 @@ export function useFinances() {
     updateCategory,
     deleteCategory,
     uploadReceipt,
+    // Payments
+    addPayment,
+    getPayments,
     refetch: fetchData,
   };
 }

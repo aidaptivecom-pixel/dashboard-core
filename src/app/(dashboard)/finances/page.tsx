@@ -17,7 +17,6 @@ import {
   Settings,
   X,
   Filter,
-  Trash2,
 } from "lucide-react";
 import {
   useFinances,
@@ -27,6 +26,7 @@ import {
   type StatusFilter,
   type SortField,
   type Category,
+  type Payment,
 } from "@/hooks/useFinances";
 
 /* ─── Constants ─── */
@@ -56,6 +56,7 @@ const TYPE_COLORS = {
   income:{bg:"bg-emerald-500/10",text:"text-emerald-400",border:"border-emerald-500/20"},
 };
 const TYPE_LABELS: Record<string,string> = {expense:"Gasto",debt:"Deuda",income:"Ingreso"};
+const TYPE_SHORT: Record<string,string> = {expense:"G",debt:"D",income:"I"};
 
 const STATUS_CONFIG = {
   paid:   {emoji:"✅",label:"Pagado",  cls:"bg-emerald-500/10 text-emerald-400"},
@@ -69,6 +70,12 @@ function fmt(n:number,cur?:string){
   if(cur==="USD") return `US$ ${n.toLocaleString("es-AR",{maximumFractionDigits:0})}`;
   return `$ ${n.toLocaleString("es-AR",{maximumFractionDigits:0})}`;
 }
+function fmtShort(n:number,cur?:string){
+  const prefix = cur==="USD"?"US$ ":"$ ";
+  if(n>=1_000_000) return `${prefix}${(n/1_000_000).toFixed(1).replace(".0","")}M`;
+  if(n>=1_000) return `${prefix}${(n/1_000).toFixed(0)}k`;
+  return `${prefix}${n.toLocaleString("es-AR",{maximumFractionDigits:0})}`;
+}
 function fmtARS(n:number){return fmt(n);}
 function fmtDate(d:string|null|undefined){
   if(!d) return "—";
@@ -79,7 +86,6 @@ function fmtDate(d:string|null|undefined){
 function EditableDollar({value,onChange}:{value:number;onChange:(v:number)=>void}){
   const [editing,setEditing]=useState(false);
   const [draft,setDraft]=useState(String(value));
-  const inputRef=useRef<HTMLInputElement>(null);
 
   const commit=()=>{
     const n=Number(draft.replace(/\D/g,""));
@@ -91,7 +97,6 @@ function EditableDollar({value,onChange}:{value:number;onChange:(v:number)=>void
     <span className="inline-flex items-center gap-1">
       <span className="text-sm text-muted-foreground">Dólar blue: $</span>
       <input
-        ref={inputRef}
         className="bg-transparent border-b border-primary text-sm font-medium w-20 outline-none"
         value={draft}
         autoFocus
@@ -109,9 +114,109 @@ function EditableDollar({value,onChange}:{value:number;onChange:(v:number)=>void
   );
 }
 
+/* ─── Payment History Section (inside edit modal) ─── */
+function PaymentHistory({
+  item,
+  onAddPayment,
+}:{
+  item: UnifiedItem;
+  onAddPayment: (amount:number, date:string, method:string, notes?:string) => Promise<void>;
+}){
+  const [showForm, setShowForm] = useState(false);
+  const [payAmount, setPayAmount] = useState("");
+  const [payDate, setPayDate] = useState(new Date().toISOString().split("T")[0]);
+  const [payMethod, setPayMethod] = useState("transferencia");
+  const [payNotes, setPayNotes] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const totalAmount = item.type === "debt" ? (item.rawItem as { total_amount: number }).total_amount : item.amount;
+  const remaining = totalAmount - item.totalPaid;
+  const progress = totalAmount > 0 ? Math.min((item.totalPaid / totalAmount) * 100, 100) : 0;
+
+  const handleAdd = async () => {
+    if (!payAmount || Number(payAmount) <= 0) return;
+    setSaving(true);
+    await onAddPayment(Number(payAmount), payDate, payMethod, payNotes || undefined);
+    setPayAmount("");
+    setPayNotes("");
+    setShowForm(false);
+    setSaving(false);
+  };
+
+  const inputCls = "w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary";
+
+  return (
+    <div className="border-t border-zinc-700 pt-4 mt-4">
+      <h3 className="text-sm font-semibold mb-3">Historial de pagos</h3>
+
+      {/* Progress bar */}
+      <div className="mb-3">
+        <div className="flex justify-between text-xs text-muted-foreground mb-1">
+          <span>Pagado: {fmt(item.totalPaid, item.currency)}</span>
+          <span>Resta: {fmt(Math.max(remaining, 0), item.currency)}</span>
+        </div>
+        <div className="w-full bg-zinc-800 rounded-full h-2.5">
+          <div
+            className={`h-2.5 rounded-full transition-all ${progress >= 100 ? "bg-emerald-500" : "bg-primary"}`}
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 text-right">{progress.toFixed(0)}% del total ({fmt(totalAmount, item.currency)})</p>
+      </div>
+
+      {/* Payment list */}
+      {item.payments.length > 0 ? (
+        <div className="space-y-1.5 mb-3 max-h-32 overflow-y-auto">
+          {item.payments.map((p) => (
+            <div key={p.id} className="flex items-center justify-between text-xs bg-zinc-800/50 rounded-lg px-3 py-2">
+              <span className="text-muted-foreground">{fmtDate(p.payment_date)}</span>
+              <span className="font-medium">{fmt(Number(p.amount), p.currency)}</span>
+              <span className="text-muted-foreground capitalize">{p.payment_method || "—"}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground mb-3">Sin pagos registrados</p>
+      )}
+
+      {/* Add payment form */}
+      {showForm ? (
+        <div className="space-y-2 bg-zinc-800/30 rounded-lg p-3">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <input className={inputCls} type="number" placeholder="Monto" value={payAmount} onChange={e=>setPayAmount(e.target.value)} />
+            </div>
+            <div className="flex-1">
+              <input className={inputCls} type="date" value={payDate} onChange={e=>setPayDate(e.target.value)} />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <select className={inputCls} value={payMethod} onChange={e=>setPayMethod(e.target.value)}>
+              {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m}</option>)}
+            </select>
+            <input className={inputCls} placeholder="Notas (opcional)" value={payNotes} onChange={e=>setPayNotes(e.target.value)} />
+          </div>
+          <div className="flex gap-2">
+            <button onClick={()=>setShowForm(false)} className="flex-1 py-1.5 rounded-lg bg-zinc-700 text-xs hover:bg-zinc-600 transition-colors">Cancelar</button>
+            <button onClick={handleAdd} disabled={saving || !payAmount}
+              className="flex-1 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
+              {saving ? "Guardando..." : "Registrar pago"}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={()=>setShowForm(true)}
+          className="w-full py-1.5 rounded-lg border border-dashed border-zinc-600 text-xs text-muted-foreground hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-1">
+          <Plus className="h-3 w-3" /> Agregar pago
+        </button>
+      )}
+    </div>
+  );
+}
+
 /* ─── Add/Edit Modal ─── */
 function ItemModal({
-  open,onOpenChange,categories,onSave,onUpload,editItem,onAddCategory,
+  open,onOpenChange,categories,onSave,onUpload,editItem,onAddCategory,onAddPayment,
 }:{
   open:boolean;
   onOpenChange:(o:boolean)=>void;
@@ -120,6 +225,7 @@ function ItemModal({
   onUpload:(f:File)=>Promise<string|null>;
   editItem:UnifiedItem|null;
   onAddCategory:(name:string,color:string)=>Promise<void>;
+  onAddPayment:(itemId:string,itemType:ItemType,amount:number,currency:"ARS"|"USD",paymentDate:string,paymentMethod:string,notes?:string)=>Promise<void>;
 }){
   const isEdit=!!editItem;
   const [type,setType]=useState<ItemType>(editItem?.type||"expense");
@@ -143,7 +249,7 @@ function ItemModal({
     if(editItem){
       setType(editItem.type);
       setDesc(editItem.description);
-      setAmount(String(editItem.amount));
+      setAmount(String(editItem.type === "debt" ? (editItem.rawItem as { total_amount: number }).total_amount : editItem.amount));
       setCurrency(editItem.currency);
       setPaidDate(editItem.paidDate||"");
       setDueDate(editItem.dueDate||"");
@@ -157,10 +263,10 @@ function ItemModal({
       setType("expense");setDesc("");setAmount("");setCurrency("ARS");
       setPaidDate("");setDueDate("");setCategory("otros");
       setPaymentMethod("transferencia");setRecurrent(false);setReceiptUrl("");
+      setPaymentType("total");setAmountPaid("");setEntity("personal");
     }
   },[editItem]);
 
-  // Reset form when modal opens
   const handleOpenChange=(o:boolean)=>{
     if(o) reset();
     onOpenChange(o);
@@ -183,7 +289,6 @@ function ItemModal({
       data.category=category;data.payment_method=paymentMethod;
       data.recurrent=recurrent;data.active=true;data.entity=entity;
       data.paid=paymentType==="total"&&!!paidDate;
-      if(paymentType==="partial"){data.paid=false;data.notes=`Parcial: pagado ${currency==="USD"?"US$":"$"}${amountPaid} de ${currency==="USD"?"US$":"$"}${amount}`;}
       data.due_date=dueDate||null;data.receipt_url=receiptUrl||null;
       data.paid_date=paidDate||null;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
@@ -193,19 +298,28 @@ function ItemModal({
       data.expected_date=dueDate||null;data.receipt_url=receiptUrl||null;
       data.paid_date=paidDate||null;data.status=paidDate?"received":"expected";data.probability="high";data.entity=entity;
       data.paid=paymentType==="total"&&!!paidDate;
-      if(paymentType==="partial"){data.paid=false;data.notes=`Parcial: cobrado ${currency==="USD"?"US$":"$"}${amountPaid} de ${currency==="USD"?"US$":"$"}${amount}`;}
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     } else {
       data.description=desc;data.total_amount=Number(amount);
-      data.amount_paid=paymentType==="partial"?Number(amountPaid||0):0;
+      data.amount_paid=0;
       data.currency=currency;data.due_date=dueDate||null;
       data.payment_method=paymentMethod;data.receipt_url=receiptUrl||null;
       data.status=paymentType==="total"&&paidDate?"paid":"pending";data.priority="medium";data.entity=entity;
       if(!isEdit) data.user_id="d1b09b1a-919e-43fa-b70b-19b0be37cabe";
     }
+    // Pass partial amount info for create
+    if(!isEdit && paymentType==="partial" && amountPaid && Number(amountPaid)>0){
+      data._partialAmount = Number(amountPaid);
+    }
+
     await onSave(type,data,editItem?.id);
     setSaving(false);
     onOpenChange(false);
+  };
+
+  const handleAddPaymentFromHistory = async (payAmt:number, payDateStr:string, payMethodStr:string, notes?:string) => {
+    if(!editItem) return;
+    await onAddPayment(editItem.id, editItem.type, payAmt, editItem.currency, payDateStr, payMethodStr, notes);
   };
 
   const inputCls="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary";
@@ -246,30 +360,32 @@ function ItemModal({
               </div>
             </div>
 
-            <div className="flex gap-3 items-end">
-              <div className="flex-1">
-                <label className={labelCls}>Tipo de pago</label>
-                <div className="flex gap-2">
-                  <button onClick={()=>setPaymentType("total")}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${paymentType==="total"?"bg-primary/20 text-primary":"bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>
-                    Total
-                  </button>
-                  <button onClick={()=>setPaymentType("partial")}
-                    className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${paymentType==="partial"?"bg-amber-500/20 text-amber-400":"bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>
-                    Parcial
-                  </button>
-                </div>
-              </div>
-              {paymentType==="partial"&&(
+            {!isEdit && (
+              <div className="flex gap-3 items-end">
                 <div className="flex-1">
-                  <label className={labelCls}>Monto pagado</label>
-                  <input className={inputCls} type="number" value={amountPaid} onChange={e=>setAmountPaid(e.target.value)} placeholder="0"/>
-                  {amount&&amountPaid&&Number(amountPaid)<Number(amount)&&(
-                    <p className="text-xs text-amber-400 mt-1">Resta: {currency==="USD"?"US$ ":"$ "}{(Number(amount)-Number(amountPaid)).toLocaleString("es-AR")}</p>
-                  )}
+                  <label className={labelCls}>Tipo de pago</label>
+                  <div className="flex gap-2">
+                    <button onClick={()=>setPaymentType("total")}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${paymentType==="total"?"bg-primary/20 text-primary":"bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>
+                      Total
+                    </button>
+                    <button onClick={()=>setPaymentType("partial")}
+                      className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${paymentType==="partial"?"bg-amber-500/20 text-amber-400":"bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>
+                      Parcial
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
+                {paymentType==="partial"&&(
+                  <div className="flex-1">
+                    <label className={labelCls}>Monto pagado</label>
+                    <input className={inputCls} type="number" value={amountPaid} onChange={e=>setAmountPaid(e.target.value)} placeholder="0"/>
+                    {amount&&amountPaid&&Number(amountPaid)<Number(amount)&&(
+                      <p className="text-xs text-amber-400 mt-1">Resta: {currency==="USD"?"US$ ":"$ "}{(Number(amount)-Number(amountPaid)).toLocaleString("es-AR")}</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex gap-3">
               <div className="flex-1"><label className={labelCls}>Fecha de pago</label>
@@ -318,6 +434,11 @@ function ItemModal({
               {uploading&&<p className="text-xs text-muted-foreground mt-1">Subiendo...</p>}
             </div>
           </div>
+
+          {/* Payment History (only in edit mode) */}
+          {isEdit && editItem && (
+            <PaymentHistory item={editItem} onAddPayment={handleAddPaymentFromHistory} />
+          )}
 
           <div className="flex gap-3 mt-6">
             <Dialog.Close className="flex-1 py-2 rounded-lg bg-zinc-800 text-sm hover:bg-zinc-700 transition-colors">Cancelar</Dialog.Close>
@@ -444,7 +565,7 @@ export default function FinancesPage() {
     statusFilter, setStatusFilter, typeFilter, setTypeFilter,
     categoryFilter, setCategoryFilter, paymentFilter, setPaymentFilter,
     sortField, setSortField, togglePaid, insertItem, updateItem,
-    addCategory, uploadReceipt,
+    addCategory, uploadReceipt, addPayment,
   } = fin;
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -463,8 +584,25 @@ export default function FinancesPage() {
     if (editId) {
       await updateItem(type, editId, data);
     } else {
-      await insertItem(type, data);
+      const inserted = await insertItem(type, data);
+      // If partial payment on create, register the initial payment
+      if (inserted && data._partialAmount) {
+        await addPayment(
+          inserted.id,
+          type,
+          Number(data._partialAmount),
+          (data.currency as "ARS" | "USD") || "ARS",
+          new Date().toISOString().split("T")[0],
+          (data.payment_method as string) || "transferencia"
+        );
+      }
     }
+  };
+
+  const handleAddPayment = async (itemId: string, itemType: ItemType, amount: number, currency: "ARS"|"USD", paymentDate: string, paymentMethod: string, notes?: string) => {
+    await addPayment(itemId, itemType, amount, currency, paymentDate, paymentMethod, notes);
+    // Refresh editItem with updated data after payment
+    // The refetch in addPayment will update the data
   };
 
   const openEdit = (item: UnifiedItem) => {
@@ -478,7 +616,6 @@ export default function FinancesPage() {
   };
 
   const semaphoreIcon = semaphore === "green" ? "🟢" : semaphore === "yellow" ? "🟡" : "🔴";
-  // category breakdown moved to general page
 
   if (loading) {
     return (
@@ -549,12 +686,13 @@ export default function FinancesPage() {
               categories={categories}
             />
 
-            {/* Table header */}
-            <div className="hidden md:grid grid-cols-[60px_1fr_100px_100px_80px_80px_80px_70px_40px_40px] px-0 py-2 text-xs text-muted-foreground border-b-2 border-border/60 bg-zinc-800/30">
+            {/* Table header — 10 cols + actions */}
+            <div className="hidden md:grid grid-cols-[65px_1fr_90px_100px_90px_80px_80px_70px_60px_50px_36px] px-0 py-2 text-xs text-muted-foreground border-b-2 border-border/60 bg-zinc-800/30">
               <span className="px-3 border-r border-border/40">Fecha</span>
               <span className="px-3 border-r border-border/40">Descripción</span>
               <span className="px-3 border-r border-border/40">Monto</span>
-              <span className="px-3 border-r border-border/40">≈ Conv.</span>
+              <span className="px-3 border-r border-border/40">Pago parcial</span>
+              <span className="px-3 border-r border-border/40">Monto USD</span>
               <span className="px-3 border-r border-border/40">Categoría</span>
               <span className="px-3 border-r border-border/40">Pago</span>
               <span className="px-3 border-r border-border/40">Vence</span>
@@ -572,14 +710,20 @@ export default function FinancesPage() {
                   const stCfg=STATUS_CONFIG[st];
                   const tColors=TYPE_COLORS[item.type];
                   const catColor=CATEGORY_COLORS[item.category||"otros"]||(categories.find(c=>c.name===item.category)?.color)||"#94A3B8";
+                  const totalAmount = item.type === "debt" ? (item.rawItem as { total_amount: number }).total_amount : item.amount;
+                  const hasPartialPayments = item.payments.length > 0 && item.totalPaid > 0 && item.totalPaid < totalAmount;
+
+                  // USD conversion: show in USD if original is ARS, show in ARS if original is USD
+                  const usdAmount = item.currency === "USD" ? item.amount : item.amount / blueRate;
+
                   return (
                     <div key={`${item.type}-${item.id}`}
-                      className={`grid grid-cols-1 md:grid-cols-[60px_1fr_100px_100px_80px_80px_80px_70px_40px_40px] items-center px-0 py-2.5 hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
+                      className={`grid grid-cols-1 md:grid-cols-[65px_1fr_90px_100px_90px_80px_80px_70px_60px_50px_36px] items-center px-0 py-2.5 hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
 
-                      {/* Date */}
-                      <span className="text-xs font-mono text-muted-foreground px-3 border-r border-border/30">{fmtDate(item.dueDate||item.fullDate)}</span>
+                      {/* 1. Fecha */}
+                      <span className="text-xs font-mono text-muted-foreground px-3 border-r border-border/30">{fmtDate(item.paidDate||item.dueDate||item.fullDate)}</span>
 
-                      {/* Description */}
+                      {/* 2. Descripción */}
                       <div className="min-w-0 px-3 border-r border-border/30">
                         <p className={`text-sm font-medium truncate ${item.paid?"line-through":""}`}>{item.description}</p>
                         {item.entity && (
@@ -589,39 +733,58 @@ export default function FinancesPage() {
                         )}
                       </div>
 
-                      {/* Amount */}
+                      {/* 3. Monto (total original) */}
                       <span className={`text-sm font-semibold ${tColors.text} px-3 border-r border-border/30`}>
-                        {item.type==="income"?"+":"-"}{fmt(item.amount,item.currency)}
+                        {item.type==="income"?"+":"-"}{fmt(totalAmount,item.currency)}
                       </span>
 
-                      {/* Converted */}
+                      {/* 4. Pago parcial */}
+                      <span className="text-xs px-3 border-r border-border/30">
+                        {hasPartialPayments ? (
+                          <span className="text-amber-400">{fmtShort(item.totalPaid, item.currency)} de {fmtShort(totalAmount, item.currency)}</span>
+                        ) : item.payments.length > 0 && item.totalPaid >= totalAmount ? (
+                          <span className="text-emerald-400">Completo</span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </span>
+
+                      {/* 5. Monto en USD */}
                       <span className="text-xs text-muted-foreground px-3 border-r border-border/30">
-                        ≈ {fmt(item.amountConverted,item.convertedCurrency)}
+                        {item.currency === "USD" ? fmt(item.amount, "USD") : `US$ ${Math.round(usdAmount).toLocaleString("es-AR")}`}
                       </span>
 
-                      {/* Category */}
+                      {/* 6. Categoría */}
                       <div className="flex items-center gap-1.5 px-3 border-r border-border/30">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{backgroundColor:catColor}}/>
                         <span className="text-xs truncate">{item.category||"—"}</span>
                       </div>
 
-                      {/* Payment */}
+                      {/* 7. Pago (método) */}
                       <span className="text-xs text-muted-foreground capitalize px-3 border-r border-border/30">{item.paymentMethod||"—"}</span>
 
-                      {/* Due date */}
+                      {/* 8. Vencimiento */}
                       <span className="text-xs text-muted-foreground px-3 border-r border-border/30">{fmtDate(item.dueDate)}</span>
 
-                      {/* Status */}
+                      {/* 9. Estado */}
                       <div className="px-3 border-r border-border/30 flex items-center">
-                        <button onClick={()=>togglePaid(item)} className={`text-xs px-2 py-0.5 rounded-full cursor-pointer transition-colors ${stCfg.cls}`}>
+                        <button
+                          onClick={()=>{
+                            // Only allow toggle if fully paid or no partial payments
+                            if(item.payments.length > 0 && item.totalPaid < totalAmount && !item.paid) return;
+                            togglePaid(item);
+                          }}
+                          className={`text-xs px-2 py-0.5 rounded-full transition-colors ${stCfg.cls} ${item.payments.length > 0 && item.totalPaid < totalAmount && !item.paid ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+                          title={stCfg.label}
+                        >
                           {stCfg.emoji}
                         </button>
                       </div>
 
-                      {/* Type + Entity */}
+                      {/* 10. Tipo + Entity */}
                       <div className="hidden md:flex flex-col gap-0.5 items-start px-3 border-r border-border/30">
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tColors.bg} ${tColors.text}`}>
-                          {TYPE_LABELS[item.type][0]}
+                          {TYPE_SHORT[item.type]}
                         </span>
                         {item.entity && item.entity !== "personal" && (
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text}`}>
@@ -654,6 +817,7 @@ export default function FinancesPage() {
         onUpload={uploadReceipt}
         editItem={editItem}
         onAddCategory={addCategory}
+        onAddPayment={handleAddPayment}
       />
     </div>
   );
