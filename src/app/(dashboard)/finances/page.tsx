@@ -697,7 +697,7 @@ export default function FinancesPage() {
             />
 
             {/* Table header — 10 cols + actions */}
-            <div className="hidden md:grid grid-cols-[65px_1fr_90px_100px_90px_80px_80px_70px_60px_50px_36px] px-0 py-2 text-xs text-muted-foreground border-b-2 border-border/60 bg-zinc-800/30">
+            <div className="hidden md:grid grid-cols-[70px_1fr_110px_110px_100px_100px_110px_90px_65px_55px_36px] px-0 py-2 text-xs text-muted-foreground border-b-2 border-border/60 bg-zinc-800/30">
               <span className="px-3 border-r border-border/40">Fecha</span>
               <span className="px-3 border-r border-border/40">Descripción</span>
               <span className="px-3 border-r border-border/40">Monto</span>
@@ -728,7 +728,7 @@ export default function FinancesPage() {
 
                   return (
                     <div key={`${item.type}-${item.id}`}
-                      className={`grid grid-cols-1 md:grid-cols-[65px_1fr_90px_100px_90px_80px_80px_70px_60px_50px_36px] items-center px-0 py-2.5 hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
+                      className={`grid grid-cols-1 md:grid-cols-[70px_1fr_110px_110px_100px_100px_110px_90px_65px_55px_36px] items-center px-0 py-2.5 hover:bg-zinc-800/50 transition-colors ${item.paid?"opacity-60":""}`}>
 
                       {/* 1. Fecha */}
                       <span className="text-xs font-mono text-muted-foreground px-3 border-r border-border/30">{fmtDate(item.paidDate||item.dueDate||item.fullDate)}</span>
@@ -753,7 +753,7 @@ export default function FinancesPage() {
                         {hasPartialPayments ? (
                           <span className="text-amber-400">{fmtShort(item.totalPaid, item.currency)} de {fmtShort(totalAmount, item.currency)}</span>
                         ) : item.payments.length > 0 && item.totalPaid >= totalAmount ? (
-                          <span className="text-emerald-400">Completo</span>
+                          <span className="text-emerald-400">Pagado</span>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
@@ -767,7 +767,7 @@ export default function FinancesPage() {
                       {/* 6. Categoría */}
                       <div className="flex items-center gap-1.5 px-3 border-r border-border/30">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{backgroundColor:catColor}}/>
-                        <span className="text-xs truncate">{item.category||"—"}</span>
+                        <span className="text-xs truncate capitalize">{item.category||"—"}</span>
                       </div>
 
                       {/* 7. Pago (método) */}
@@ -797,7 +797,7 @@ export default function FinancesPage() {
                           {TYPE_SHORT[item.type]}
                         </span>
                         {item.entity && item.entity !== "personal" && (
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text}`}>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full capitalize ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).bg} ${(ENTITY_COLORS[item.entity]||ENTITY_COLORS.personal).text}`}>
                             {item.entity}
                           </span>
                         )}
