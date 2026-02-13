@@ -383,7 +383,7 @@ function ItemModal({
             {!isEdit && (
               <div className="flex gap-3 items-end">
                 <div className="flex-1">
-                  <label className={labelCls}>Tipo de pago</label>
+                  <label className={labelCls}>Tipo de Pago</label>
                   <div className="flex gap-2">
                     <button onClick={()=>setPaymentType("total")}
                       className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition-colors ${paymentType==="total"?"bg-primary/20 text-primary":"bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}>
@@ -408,9 +408,9 @@ function ItemModal({
             )}
 
             <div className="flex gap-3">
-              <div className="flex-1"><label className={labelCls}>Fecha de pago</label>
+              <div className="flex-1"><label className={labelCls}>Pago</label>
                 <input className={inputCls} type="date" value={paidDate} onChange={e=>setPaidDate(e.target.value)}/></div>
-              <div className="flex-1"><label className={labelCls}>Fecha vencimiento</label>
+              <div className="flex-1"><label className={labelCls}>Vence</label>
                 <input className={inputCls} type="date" value={dueDate} onChange={e=>setDueDate(e.target.value)}/></div>
             </div>
 
@@ -420,13 +420,13 @@ function ItemModal({
               </select>
             </div>
 
-            <div><label className={labelCls}>Forma de pago</label>
+            <div><label className={labelCls}>Forma de Pago</label>
               <select className={inputCls} value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value)}>
                 {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m}</option>)}
               </select>
             </div>
 
-            <div><label className={labelCls}>Pertenece a</label>
+            <div><label className={labelCls}>Pertenece A</label>
               <select className={inputCls} value={entity} onChange={e=>setEntity(e.target.value)}>
                 {ENTITIES.map(e=><option key={e} value={e}>{e.charAt(0).toUpperCase()+e.slice(1)}</option>)}
               </select>
@@ -469,7 +469,7 @@ function ItemModal({
               {receiptUrl?
                 <div className="flex items-center gap-2 text-sm">
                   <Paperclip className="h-4 w-4 text-primary"/>
-                  <a href={receiptUrl} target="_blank" rel="noopener" className="text-primary hover:underline truncate">Comprobante adjunto</a>
+                  <a href={receiptUrl} target="_blank" rel="noopener" className="text-primary hover:underline truncate">Comprobante Adjunto</a>
                   <button onClick={()=>setReceiptUrl("")} className="text-zinc-500 hover:text-rose-400"><X className="h-3 w-3"/></button>
                 </div>
               :
