@@ -197,7 +197,7 @@ function PaymentHistory({
           </div>
           <div className="flex gap-2">
             <select className={inputCls} value={payMethod} onChange={e=>setPayMethod(e.target.value)}>
-              {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m}</option>)}
+              {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m.charAt(0).toUpperCase()+m.slice(1)}</option>)}
             </select>
             <input className={inputCls} placeholder="Notas (opcional)" value={payNotes} onChange={e=>setPayNotes(e.target.value)} />
           </div>
@@ -416,13 +416,13 @@ function ItemModal({
 
             <div><label className={labelCls}>Categoría <button onClick={()=>setCatModalOpen(true)} className="ml-1 hover:text-primary"><Settings className="h-3 w-3 inline"/></button></label>
               <select className={inputCls} value={category} onChange={e=>setCategory(e.target.value)}>
-                {categories.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}
+                {categories.map(c=><option key={c.id} value={c.name} className="capitalize">{c.name.charAt(0).toUpperCase()+c.name.slice(1)}</option>)}
               </select>
             </div>
 
             <div><label className={labelCls}>Forma de Pago</label>
               <select className={inputCls} value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value)}>
-                {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m}</option>)}
+                {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m.charAt(0).toUpperCase()+m.slice(1)}</option>)}
               </select>
             </div>
 
@@ -593,11 +593,11 @@ function FilterBar({
       </select>
       <select className={selectCls} value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}>
         <option value="all">Categoría: Todas</option>
-        {categories.map(c=><option key={c.id} value={c.name}>{c.name}</option>)}
+        {categories.map(c=><option key={c.id} value={c.name} className="capitalize">{c.name.charAt(0).toUpperCase()+c.name.slice(1)}</option>)}
       </select>
       <select className={selectCls} value={paymentFilter} onChange={e=>setPaymentFilter(e.target.value)}>
         <option value="all">Pago: Todos</option>
-        {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m}</option>)}
+        {PAYMENT_METHODS.map(m=><option key={m} value={m}>{m.charAt(0).toUpperCase()+m.slice(1)}</option>)}
       </select>
       <div className="ml-auto">
         <select className={selectCls} value={sortField} onChange={e=>setSortField(e.target.value as SortField)}>
